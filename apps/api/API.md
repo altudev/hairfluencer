@@ -3,16 +3,28 @@
 AI-powered hairstyle try-on application backend API for mobile and web clients.
 
 ## Base URL
-- Development: `http://localhost:3000`
-- Production: Configure via `BETTER_AUTH_URL` environment variable
+- Development: `http://localhost:3000/api/v1`
+- Production: Configure via `BETTER_AUTH_URL` environment variable (e.g. `https://api.hairfluencer.app/api/v1`)
 - Mobile Expo Dev: `exp://localhost:8081`
+
+All new features should target `/api/v1`. Future breaking changes will be released under `/api/v2`, `/api/v3`, etc., allowing the mobile clients to migrate on their own schedule.
+
+## Versioned Endpoint Map (MVP)
+
+| Domain      | Mount Path            | Example Purpose                                  |
+|-------------|-----------------------|--------------------------------------------------|
+| Auth        | `/api/v1/auth/*`      | Better Auth email/password + Google OAuth flows  |
+| Health      | `/api/v1/health`      | Up-time checks for monitors                      |
+| Hairstyles  | `/api/v1/hairstyles`  | Gallery CRUD (stubbed responses for now)         |
+| Try-ons     | `/api/v1/try-ons`     | AI job submission + polling stubs                |
+| Favorites   | `/api/v1/favorites`   | Saved results CRUD stubs                         |
 
 ## Authentication Endpoints
 
-All authentication endpoints are prefixed with `/api/auth/`. The API supports both email/password and Google OAuth authentication optimized for mobile app usage.
+All authentication endpoints are prefixed with `/api/v1/auth/`. The API supports both email/password and Google OAuth authentication optimized for mobile app usage.
 
 ### Register User
-**POST** `/api/auth/sign-up`
+**POST** `/api/v1/auth/sign-up`
 
 Create a new user account with email and password.
 
@@ -48,7 +60,7 @@ Create a new user account with email and password.
 ```
 
 ### Login
-**POST** `/api/auth/sign-in`
+**POST** `/api/v1/auth/sign-in`
 
 Authenticate user with email and password.
 
@@ -81,7 +93,7 @@ Authenticate user with email and password.
 ```
 
 ### Logout
-**POST** `/api/auth/sign-out`
+**POST** `/api/v1/auth/sign-out`
 
 End current user session.
 
@@ -98,7 +110,7 @@ Headers: {
 ```
 
 ### Get Session
-**GET** `/api/auth/session`
+**GET** `/api/v1/auth/session`
 
 Get current user session information.
 
@@ -129,7 +141,7 @@ Headers: {
 ```
 
 ### Google OAuth Login
-**GET** `/api/auth/google`
+**GET** `/api/v1/auth/google`
 
 Initiate Google OAuth flow for mobile app login.
 
@@ -139,11 +151,11 @@ Initiate Google OAuth flow for mobile app login.
 
 // Response
 // Redirects to Google OAuth consent page
-// After consent, redirects to: /api/auth/callback/google
+// After consent, redirects to: /api/v1/auth/callback/google
 ```
 
 ### Google OAuth Callback
-**GET** `/api/auth/callback/google`
+**GET** `/api/v1/auth/callback/google`
 
 Handle Google OAuth callback (automatically processed).
 
@@ -160,7 +172,7 @@ Handle Google OAuth callback (automatically processed).
 ## Health Check Endpoint
 
 ### System Health
-**GET** `/api/health`
+**GET** `/api/v1/health`
 
 Check API and database connectivity status.
 
