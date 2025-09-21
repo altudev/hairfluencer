@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import {
   StyleSheet,
   Text,
@@ -19,6 +19,7 @@ import { Ionicons, MaterialIcons, FontAwesome } from '@expo/vector-icons';
 import Constants from 'expo-constants';
 import { useRouter } from 'expo-router';
 import useStore from '@/stores/useStore';
+import { HomeScreenSkeleton } from '@/components/LoadingSkeletons';
 
 const { width } = Dimensions.get('window');
 
@@ -103,6 +104,7 @@ const categories = ['All Styles', 'Short Hair', 'Long Hair', 'Curly', 'Braids', 
 export default function HomeScreen() {
   const router = useRouter();
   const pulseAnim = useRef(new Animated.Value(1)).current;
+  const [isLoading, setIsLoading] = useState(true);
 
   // Zustand store
   const {
@@ -133,6 +135,18 @@ export default function HomeScreen() {
     pulse.start();
     return () => pulse.stop();
   }, [pulseAnim]);
+
+  useEffect(() => {
+    // Simulate data loading
+    const loadData = async () => {
+      // In real app, this would be an API call
+      setTimeout(() => {
+        setIsLoading(false);
+      }, 1500);
+    };
+
+    loadData();
+  }, []);
 
 
   const renderStars = (rating: number) => {
@@ -230,6 +244,10 @@ export default function HomeScreen() {
       </LinearGradient>
     </TouchableOpacity>
   );
+
+  if (isLoading) {
+    return <HomeScreenSkeleton />;
+  }
 
   return (
     <SafeAreaView style={styles.container}>

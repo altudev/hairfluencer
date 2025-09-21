@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   StyleSheet,
   Text,
@@ -16,6 +16,7 @@ import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import Constants from 'expo-constants';
+import { UploadScreenSkeleton } from '@/components/LoadingSkeletons';
 
 const { width, height } = Dimensions.get('window');
 
@@ -26,6 +27,14 @@ export default function UploadScreen() {
 
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    // Simulate initial loading
+    setTimeout(() => {
+      setIsLoading(false);
+    }, 800);
+  }, []);
 
   const pickImageFromGallery = async () => {
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -87,6 +96,10 @@ export default function UploadScreen() {
       });
     }, 500);
   };
+
+  if (isLoading) {
+    return <UploadScreenSkeleton />;
+  }
 
   return (
     <View style={styles.container}>
