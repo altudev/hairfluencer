@@ -1,61 +1,64 @@
-import React, { useRef, useEffect, useState } from 'react';
+// React imports
+import React, { useEffect, useRef, useState } from 'react';
+
+// React Native imports
 import {
+  Animated,
+  Dimensions,
+  FlatList,
+  Platform,
+  SafeAreaView,
+  ScrollView,
+  StatusBar,
   StyleSheet,
   Text,
-  View,
-  ScrollView,
   TextInput,
   TouchableOpacity,
-  Image,
-  FlatList,
-  Dimensions,
-  Animated,
-  StatusBar,
-  SafeAreaView,
-  Platform,
+  View,
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons, MaterialIcons, FontAwesome } from '@expo/vector-icons';
+
+// Expo imports
+import { FontAwesome, Ionicons, MaterialIcons } from '@expo/vector-icons';
 import Constants from 'expo-constants';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import useStore from '@/stores/useStore';
+
+// Internal imports
+import { avatarImage, hairstyles as localHairstyles } from '@/assets/images/hairstyleData';
+import HairstyleCard, { HairstyleData } from '@/components/HairstyleCard';
 import { HomeScreenSkeleton } from '@/components/LoadingSkeletons';
-import ImageWithFallback from '@/components/ImageWithFallback';
 import OptimizedImage from '@/components/OptimizedImage';
-import { hairstyles as localHairstyles, avatarImage } from '@/assets/images/hairstyleData';
+import { ANIMATION, CATEGORIES, COLORS } from '@/constants';
+import useStore from '@/stores/useStore';
 
 const { width } = Dimensions.get('window');
 
-interface HairstyleCard {
-  id: string;
-  title: string;
-  image: any;
-  rating: number;
-  isFavorite?: boolean;
-}
+// Using HairstyleData from HairstyleCard component
+type HairstyleItem = HairstyleData;
 
 // Map local hairstyles to the format used by the component
-const trendingStyles: HairstyleCard[] = localHairstyles
+const trendingStyles: HairstyleItem[] = localHairstyles
   .filter(h => h.trending)
   .map(h => ({
     id: h.id,
     title: h.name,
     image: h.image,
     rating: h.rating,
-    isFavorite: false,
+    price: h.price,
+    category: h.category,
   }));
 
-const galleryStyles: HairstyleCard[] = localHairstyles
+const galleryStyles: HairstyleItem[] = localHairstyles
   .filter(h => !h.trending)
   .map(h => ({
     id: h.id,
     title: h.name,
     image: h.image,
     rating: h.rating,
-    isFavorite: false,
+    category: h.category,
   }));
 
-const categories = ['All Styles', 'Short Hair', 'Long Hair', 'Curly', 'Braids', 'Updos'];
+const categories = CATEGORIES.slice(0, 6); // Use first 6 categories from constants
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -78,12 +81,12 @@ export default function HomeScreen() {
       Animated.sequence([
         Animated.timing(pulseAnim, {
           toValue: 1.1,
-          duration: 1000,
+          duration: ANIMATION.PULSE_DURATION,
           useNativeDriver: true,
         }),
         Animated.timing(pulseAnim, {
           toValue: 1,
-          duration: 1000,
+          duration: ANIMATION.PULSE_DURATION,
           useNativeDriver: true,
         }),
       ])
@@ -105,22 +108,6 @@ export default function HomeScreen() {
   }, []);
 
 
-  const renderStars = (rating: number) => {
-    const stars = [];
-    const fullStars = Math.floor(rating);
-    const hasHalfStar = rating % 1 >= 0.5;
-
-    for (let i = 0; i < fullStars; i++) {
-      stars.push(<FontAwesome key={`star-${i}`} name="star" size={10} color="#FFC107" />);
-    }
-    if (hasHalfStar && fullStars < 5) {
-      stars.push(<FontAwesome key="star-half" name="star-o" size={10} color="#FFC107" />);
-    }
-    for (let i = stars.length; i < 5; i++) {
-      stars.push(<FontAwesome key={`star-empty-${i}`} name="star-o" size={10} color="#FFC107" />);
-    }
-    return stars;
-  };
 
   const handleStylePress = (styleId: string, styleName: string) => {
     // Set selected hairstyle in store
@@ -137,72 +124,25 @@ export default function HomeScreen() {
     });
   };
 
-  const renderTrendingCard = ({ item }: { item: HairstyleCard }) => (
-    <TouchableOpacity
-      activeOpacity={0.9}
-      style={styles.trendingCard}
-      onPress={() => handleStylePress(item.id, item.title)}
-    >
-      <OptimizedImage source={item.image} style={styles.trendingImage} priority="high" />
-      <LinearGradient
-        colors={['transparent', 'rgba(0,0,0,0.6)']}
-        style={styles.trendingGradient}
-      >
-        <Text style={styles.trendingTitle}>{item.title}</Text>
-        <View style={styles.trendingBottom}>
-          <View style={styles.ratingContainer}>
-            <View style={styles.starsContainer}>{renderStars(item.rating)}</View>
-            <Text style={styles.ratingText}>{item.rating}</Text>
-          </View>
-          <TouchableOpacity onPress={(e) => {
-            e.stopPropagation();
-            toggleFavorite(item.id);
-          }}>
-            <FontAwesome
-              name={favorites.has(item.id) ? 'heart' : 'heart-o'}
-              size={16}
-              color={favorites.has(item.id) ? '#FF6B6B' : 'white'}
-            />
-          </TouchableOpacity>
-        </View>
-      </LinearGradient>
-    </TouchableOpacity>
+  const renderTrendingCard = ({ item }: { item: HairstyleItem }) => (
+    <HairstyleCard
+      item={item}
+      variant="trending"
+      isFavorite={favorites.has(item.id)}
+      onPress={handleStylePress}
+      onFavoritePress={toggleFavorite}
+    />
   );
 
-  const renderGalleryCard = ({ item, index }: { item: HairstyleCard; index: number }) => (
-    <TouchableOpacity
-      activeOpacity={0.9}
-      style={[styles.galleryCard, index % 2 === 1 && styles.galleryCardRight]}
-      onPress={() => handleStylePress(item.id, item.title)}
-    >
-      <OptimizedImage
-        source={item.image}
-        style={styles.galleryImage}
-        priority={index < 4 ? "normal" : "low"}
-      />
-      <LinearGradient
-        colors={['transparent', 'rgba(0,0,0,0.7)']}
-        style={styles.galleryGradient}
-      >
-        <Text style={styles.galleryTitle}>{item.title}</Text>
-        <View style={styles.galleryBottom}>
-          <View style={styles.ratingContainer}>
-            <View style={styles.starsContainer}>{renderStars(item.rating)}</View>
-            <Text style={styles.ratingText}>{item.rating}</Text>
-          </View>
-          <TouchableOpacity onPress={(e) => {
-            e.stopPropagation();
-            toggleFavorite(item.id);
-          }}>
-            <FontAwesome
-              name={favorites.has(item.id) ? 'heart' : 'heart-o'}
-              size={14}
-              color={favorites.has(item.id) ? '#FF6B6B' : 'white'}
-            />
-          </TouchableOpacity>
-        </View>
-      </LinearGradient>
-    </TouchableOpacity>
+  const renderGalleryCard = ({ item, index }: { item: HairstyleItem; index: number }) => (
+    <HairstyleCard
+      item={item}
+      variant="gallery"
+      index={index}
+      isFavorite={favorites.has(item.id)}
+      onPress={handleStylePress}
+      onFavoritePress={toggleFavorite}
+    />
   );
 
   if (isLoading) {

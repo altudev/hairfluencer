@@ -1,4 +1,13 @@
 import useStore from './useStore';
+import {
+  ApiError,
+  handleApiResponse,
+  retryRequest,
+  logError,
+  showErrorAlert,
+  showSuccessAlert,
+} from '@/utils/errorHandler';
+import { API, SUCCESS_MESSAGES } from '@/constants';
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -25,7 +34,7 @@ export const useApi = () => {
     setLoading(true);
 
     try {
-      // Mock API delay
+      // Mock API delay for now
       await new Promise(resolve => setTimeout(resolve, 3000));
 
       // Mock successful transformation
@@ -40,13 +49,15 @@ export const useApi = () => {
 
       // Store transformation result
       addTransformation(result);
+      showSuccessAlert(SUCCESS_MESSAGES.TRANSFORMATION_COMPLETE);
 
       return {
         success: true,
         data: result,
       };
     } catch (error) {
-      console.error('Generation error:', error);
+      logError(error, 'generateHairstyle');
+      showErrorAlert(error);
       return {
         success: false,
         error: 'Failed to generate hairstyle',
@@ -60,29 +71,36 @@ export const useApi = () => {
     setLoading(true);
 
     try {
-      // Mock API call
-      const response = await fetch(`${API_BASE_URL}/api/auth/sign-in`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-      });
+      const request = async () => {
+        const response = await fetch(`${API_BASE_URL}${API.ENDPOINTS.AUTH}/sign-in`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ email, password }),
+          signal: AbortSignal.timeout(API.TIMEOUT),
+        });
 
-      if (!response.ok) {
-        throw new Error('Login failed');
-      }
+        return handleApiResponse(response);
+      };
 
-      const data = await response.json();
+      const data = await retryRequest(request, API.RETRY_COUNT);
       return {
         success: true,
         data,
       };
     } catch (error) {
-      console.error('Login error:', error);
+      logError(error, 'login');
+
+      if (error instanceof ApiError && error.statusCode === 401) {
+        showErrorAlert(new Error('Invalid email or password'));
+      } else {
+        showErrorAlert(error);
+      }
+
       return {
         success: false,
-        error: 'Invalid email or password',
+        error: error instanceof Error ? error.message : 'Login failed',
       };
     } finally {
       setLoading(false);
@@ -97,29 +115,31 @@ export const useApi = () => {
     setLoading(true);
 
     try {
-      // Mock API call
-      const response = await fetch(`${API_BASE_URL}/api/auth/sign-up`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password, name }),
-      });
+      const request = async () => {
+        const response = await fetch(`${API_BASE_URL}${API.ENDPOINTS.AUTH}/sign-up`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ email, password, name }),
+          signal: AbortSignal.timeout(API.TIMEOUT),
+        });
 
-      if (!response.ok) {
-        throw new Error('Signup failed');
-      }
+        return handleApiResponse(response);
+      };
 
-      const data = await response.json();
+      const data = await retryRequest(request, API.RETRY_COUNT);
+      showSuccessAlert('Account created successfully!');
       return {
         success: true,
         data,
       };
     } catch (error) {
-      console.error('Signup error:', error);
+      logError(error, 'signup');
+      showErrorAlert(error);
       return {
         success: false,
-        error: 'Failed to create account',
+        error: error instanceof Error ? error.message : 'Signup failed',
       };
     } finally {
       setLoading(false);
@@ -128,11 +148,13 @@ export const useApi = () => {
 
   const logout = async (): Promise<void> => {
     try {
-      await fetch(`${API_BASE_URL}/api/auth/sign-out`, {
+      await fetch(`${API_BASE_URL}${API.ENDPOINTS.AUTH}/sign-out`, {
         method: 'POST',
+        signal: AbortSignal.timeout(API.TIMEOUT),
       });
     } catch (error) {
-      console.error('Logout error:', error);
+      logError(error, 'logout');
+      // Don't show error for logout - just log it
     }
   };
 
