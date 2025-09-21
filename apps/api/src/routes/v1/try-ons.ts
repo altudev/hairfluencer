@@ -13,8 +13,30 @@ import { isValidRemoteUrl, type UrlValidationFailureReason } from '../../utils/u
 
 const allowedOutputFormats = new Set(['jpeg', 'png']);
 const allowedPriorities = new Set(['low', 'normal']);
+
 const MAX_IMAGE_URLS = 10;
 const MAX_URL_LENGTH = 2048;
+const MAX_REQUEST_BODY_BYTES = 32 * 1024; // 32 KB limit for JSON payloads
+const RATE_LIMIT_WINDOW_MS = 60 * 1000;
+const RATE_LIMIT_MAX_REQUESTS = 20;
+const MAX_ACTIVE_QUEUE_JOBS = 5;
+const ACTIVE_JOB_TTL_MS = 30 * 60 * 1000;
+
+const encoder = new TextEncoder();
+
+type RateLimitEntry = {
+  count: number;
+  resetAt: number;
+};
+
+type JobOwnership = {
+  owner: string;
+  expiresAt: number;
+};
+
+const rateLimitStore = new Map<string, RateLimitEntry>();
+const activeJobsByClient = new Map<string, Set<string>>();
+const jobOwners = new Map<string, JobOwnership>();
 
 class TryOnValidationError extends Error {
   constructor(public readonly field: string, message: string) {
@@ -23,14 +45,44 @@ class TryOnValidationError extends Error {
   }
 }
 
+class TryOnRequestTooLargeError extends Error {
+  constructor(message = 'Request body exceeds allowed size') {
+    super(message);
+    this.name = 'TryOnRequestTooLargeError';
+  }
+}
+
+class TryOnRateLimitError extends Error {
+  constructor(public readonly retryAfterSeconds: number) {
+    super('Rate limit exceeded');
+    this.name = 'TryOnRateLimitError';
+  }
+}
+
+class TryOnQueueLimitError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'TryOnQueueLimitError';
+  }
+}
+
 export const createTryOnRoutes = () => {
   const app = new Hono();
 
   app.post('/', async (c) => {
+    const clientKey = getClientIdentifier(c);
+
     try {
-      const payload = await c.req.json();
+      enforceRateLimit(clientKey);
+
+      const payload = await parseJsonBody(c);
       const request = parseSubmitPayload(payload);
+
+      cleanupExpiredJobs();
+      ensureQueueCapacity(clientKey);
+
       const response = await submitHairstyleGeneration(request);
+      registerActiveJob(clientKey, response.job.id);
 
       return c.json(
         {
@@ -47,6 +99,7 @@ export const createTryOnRoutes = () => {
   });
 
   app.get('/:jobId', async (c) => {
+    const clientKey = getClientIdentifier(c);
     const { jobId } = c.req.param();
 
     if (!jobId) {
@@ -66,10 +119,17 @@ export const createTryOnRoutes = () => {
     const includeLogs = logsParam ? logsParam.toLowerCase() === 'true' : false;
 
     try {
+      enforceRateLimit(clientKey);
+      cleanupExpiredJobs();
+
       const response = await getHairstyleGenerationStatus(jobId, {
         includeResult,
         logs: includeLogs,
       });
+
+      if (response.job.status === 'completed') {
+        releaseActiveJob(response.job.id);
+      }
 
       const data: Record<string, unknown> = {
         job: serializeJob(response.job),
@@ -93,13 +153,42 @@ export const createTryOnRoutes = () => {
   return app;
 };
 
-const isValidUrl = (url: string): boolean => {
-  try {
-    const parsed = new URL(url);
-    return ['http:', 'https:'].includes(parsed.protocol);
-  } catch {
-    return false;
+const parseJsonBody = async (c: Context): Promise<Record<string, unknown>> => {
+  const request = c.req.raw;
+  const contentLengthHeader = request.headers.get('content-length');
+
+  if (contentLengthHeader) {
+    const declaredLength = Number(contentLengthHeader);
+
+    if (!Number.isNaN(declaredLength) && declaredLength > MAX_REQUEST_BODY_BYTES) {
+      throw new TryOnRequestTooLargeError();
+    }
   }
+
+  const bodyText = await request.text();
+  const bodySize = encoder.encode(bodyText).length;
+
+  if (bodySize > MAX_REQUEST_BODY_BYTES) {
+    throw new TryOnRequestTooLargeError();
+  }
+
+  if (bodyText.trim().length === 0) {
+    throw new TryOnValidationError('payload', 'Request body must be a JSON object');
+  }
+
+  let parsed: unknown;
+
+  try {
+    parsed = JSON.parse(bodyText);
+  } catch {
+    throw new TryOnValidationError('payload', 'Invalid JSON payload');
+  }
+
+  if (typeof parsed !== 'object' || parsed === null) {
+    throw new TryOnValidationError('payload', 'Request body must be a JSON object');
+  }
+
+  return parsed as Record<string, unknown>;
 };
 
 const parseSubmitPayload = (payload: unknown): HairstyleGenerationRequest => {
@@ -117,6 +206,8 @@ const parseSubmitPayload = (payload: unknown): HairstyleGenerationRequest => {
     webhookUrl,
     hint,
   } = payload as Record<string, unknown>;
+
+  let sanitizedWebhookUrl: string | undefined;
 
   if (typeof prompt !== 'string' || !prompt.trim()) {
     throw new TryOnValidationError('prompt', 'prompt is required');
@@ -144,10 +235,6 @@ const parseSubmitPayload = (payload: unknown): HairstyleGenerationRequest => {
 
       if (trimmedUrl.length > MAX_URL_LENGTH) {
         throw new TryOnValidationError('imageUrls', `URL exceeds maximum length of ${MAX_URL_LENGTH} characters`);
-      }
-
-      if (!isValidUrl(trimmedUrl)) {
-        throw new TryOnValidationError('imageUrls', `Invalid URL format: ${trimmedUrl}`);
       }
 
       return trimmedUrl;
@@ -198,8 +285,15 @@ const parseSubmitPayload = (payload: unknown): HairstyleGenerationRequest => {
     }
 
     const trimmedWebhookUrl = webhookUrl.trim();
-    if (trimmedWebhookUrl && !isValidUrl(trimmedWebhookUrl)) {
-      throw new TryOnValidationError('webhookUrl', 'webhookUrl must be a valid URL');
+
+    if (trimmedWebhookUrl.length > 0) {
+      const validation = isValidRemoteUrl(trimmedWebhookUrl);
+
+      if (!validation.valid) {
+        throw new TryOnValidationError('webhookUrl', mapUrlError(validation.reason));
+      }
+
+      sanitizedWebhookUrl = trimmedWebhookUrl;
     }
   }
 
@@ -214,7 +308,7 @@ const parseSubmitPayload = (payload: unknown): HairstyleGenerationRequest => {
     outputFormat: outputFormat as 'jpeg' | 'png' | undefined,
     syncMode: syncMode as boolean | undefined,
     priority: priority as 'low' | 'normal' | undefined,
-    webhookUrl: webhookUrl as string | undefined,
+    webhookUrl: sanitizedWebhookUrl,
     hint: hint as string | undefined,
   };
 };
@@ -263,6 +357,38 @@ const handleError = (error: unknown, c: Context) => {
     );
   }
 
+  if (error instanceof TryOnRequestTooLargeError) {
+    return c.json(
+      {
+        error: 'REQUEST_TOO_LARGE',
+        message: error.message,
+      },
+      413,
+    );
+  }
+
+  if (error instanceof TryOnRateLimitError) {
+    c.header('Retry-After', String(error.retryAfterSeconds));
+
+    return c.json(
+      {
+        error: 'RATE_LIMITED',
+        message: 'Too many requests. Please slow down.',
+      },
+      429,
+    );
+  }
+
+  if (error instanceof TryOnQueueLimitError) {
+    return c.json(
+      {
+        error: 'QUEUE_LIMIT_REACHED',
+        message: error.message,
+      },
+      429,
+    );
+  }
+
   if (error instanceof ApiError) {
     const status = error.status ?? 500;
     const message = extractFalErrorMessage(error);
@@ -280,7 +406,7 @@ const handleError = (error: unknown, c: Context) => {
         error: errorCode,
         message,
       },
-      status as any,
+      status,
     );
   }
 
@@ -351,5 +477,105 @@ const mapUrlError = (reason: UrlValidationFailureReason) => {
       return 'image URL host is not whitelisted';
     default:
       return 'invalid image URL';
+  }
+};
+
+const getClientIdentifier = (c: Context) => {
+  const headers = c.req;
+  const explicitUser = headers.header('x-user-id');
+  if (explicitUser) {
+    return explicitUser;
+  }
+
+  const forwarded = headers.header('x-forwarded-for');
+  if (forwarded) {
+    return forwarded.split(',')[0].trim();
+  }
+
+  const realIp = headers.header('x-real-ip') || headers.header('cf-connecting-ip');
+  if (realIp) {
+    return realIp.trim();
+  }
+
+  return 'anonymous';
+};
+
+const enforceRateLimit = (clientKey: string) => {
+  const now = Date.now();
+  const entry = rateLimitStore.get(clientKey);
+
+  if (!entry || entry.resetAt <= now) {
+    rateLimitStore.set(clientKey, {
+      count: 1,
+      resetAt: now + RATE_LIMIT_WINDOW_MS,
+    });
+    return;
+  }
+
+  if (entry.count >= RATE_LIMIT_MAX_REQUESTS) {
+    const retryAfter = Math.max(1, Math.ceil((entry.resetAt - now) / 1000));
+    throw new TryOnRateLimitError(retryAfter);
+  }
+
+  entry.count += 1;
+};
+
+const ensureQueueCapacity = (clientKey: string) => {
+  const activeSet = activeJobsByClient.get(clientKey);
+
+  if (activeSet && activeSet.size >= MAX_ACTIVE_QUEUE_JOBS) {
+    throw new TryOnQueueLimitError('Too many pending try-ons. Please wait for existing jobs to finish.');
+  }
+};
+
+const registerActiveJob = (clientKey: string, jobId: string) => {
+  const now = Date.now();
+  const set = activeJobsByClient.get(clientKey) ?? new Set<string>();
+
+  set.add(jobId);
+  activeJobsByClient.set(clientKey, set);
+  jobOwners.set(jobId, {
+    owner: clientKey,
+    expiresAt: now + ACTIVE_JOB_TTL_MS,
+  });
+};
+
+const releaseActiveJob = (jobId: string) => {
+  const ownership = jobOwners.get(jobId);
+
+  if (!ownership) {
+    return;
+  }
+
+  jobOwners.delete(jobId);
+  const set = activeJobsByClient.get(ownership.owner);
+
+  if (!set) {
+    return;
+  }
+
+  set.delete(jobId);
+
+  if (set.size === 0) {
+    activeJobsByClient.delete(ownership.owner);
+  }
+};
+
+const cleanupExpiredJobs = () => {
+  const now = Date.now();
+
+  for (const [jobId, ownership] of jobOwners) {
+    if (ownership.expiresAt <= now) {
+      jobOwners.delete(jobId);
+      const set = activeJobsByClient.get(ownership.owner);
+
+      if (set) {
+        set.delete(jobId);
+
+        if (set.size === 0) {
+          activeJobsByClient.delete(ownership.owner);
+        }
+      }
+    }
   }
 };

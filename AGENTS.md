@@ -48,6 +48,7 @@ Develop with Node 18+ and Bun 1.2.x. Each app requires specific environment vari
 - `FAL_API_KEY` - FAL.ai authentication key for AI transformations
 - `FAL_MODEL_ID` - Set to "nano-banana/edit" for hairstyle editing
 - `FRONTEND_URL` - Mobile app URL for CORS
+- `FAL_ALLOWED_IMAGE_HOSTS` (optional) - Comma-separated host whitelist enforced during image URL validation
 
 ### Mobile Environment (`apps/mobile/.env`):
 - `EXPO_PUBLIC_API_URL` - Backend API URL
@@ -56,6 +57,7 @@ Develop with Node 18+ and Bun 1.2.x. Each app requires specific environment vari
 
 - Never commit secrets; update `.env.example` instead. For deployment, use secure environment variable management.
 - If `FAL_API_KEY` is missing, fal.ai-powered endpoints now return a 503 rather than crashing the API process.
+- Try-on routes enforce 32KB body size limit, cap image URLs at 10, rate-limit clients (20/min) and allow at most five active queue jobs per client.
 
 ## PRD Success Metrics (Hackathon Goals)
 - **User Metrics**: 200+ sign-ups, 100+ completed try-ons in week 1

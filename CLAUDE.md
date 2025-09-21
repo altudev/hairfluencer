@@ -89,6 +89,7 @@ GOOGLE_CLIENT_SECRET=your-google-client-secret
 # FAL.ai Integration (AI hairstyle transformation)
 FAL_API_KEY=your-fal-api-key # when missing, try-on routes respond 503 instead of crashing
 FAL_MODEL_ID=nano-banana/edit
+FAL_ALLOWED_IMAGE_HOSTS=cdn.example.com,images.example.com # optional: restrict allowed upload hosts
 
 # Adapty Integration (mobile payments)
 ADAPTY_PUBLIC_KEY=your-adapty-public-key
@@ -128,3 +129,4 @@ ADAPTY_SECRET_KEY=your-adapty-secret-key
 - Deep linking support: `hairfluencer://`
 - CORS configured for mobile app requests
 - Google OAuth redirect handling for mobile
+- Try-on API enforces URL validation, 32KB payload limit, 10 image URL cap, basic per-client rate/queue limits
