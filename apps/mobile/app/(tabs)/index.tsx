@@ -20,84 +20,39 @@ import Constants from 'expo-constants';
 import { useRouter } from 'expo-router';
 import useStore from '@/stores/useStore';
 import { HomeScreenSkeleton } from '@/components/LoadingSkeletons';
+import ImageWithFallback from '@/components/ImageWithFallback';
+import { hairstyles as localHairstyles, avatarImage } from '@/assets/images/hairstyleData';
 
 const { width } = Dimensions.get('window');
 
 interface HairstyleCard {
   id: string;
   title: string;
-  image: string;
+  image: any;
   rating: number;
   isFavorite?: boolean;
 }
 
-const trendingStyles: HairstyleCard[] = [
-  {
-    id: '1',
-    title: 'Pixie Perfection',
-    image: 'https://storage.googleapis.com/uxpilot-auth.appspot.com/be64cd2931-947e9871d4c77c2507b6.png',
-    rating: 4.8,
-  },
-  {
-    id: '2',
-    title: 'Beach Waves',
-    image: 'https://storage.googleapis.com/uxpilot-auth.appspot.com/2beb6a10f5-a3d954e519944b9a2e0e.png',
-    rating: 4.6,
-  },
-];
+// Map local hairstyles to the format used by the component
+const trendingStyles: HairstyleCard[] = localHairstyles
+  .filter(h => h.trending)
+  .map(h => ({
+    id: h.id,
+    title: h.name,
+    image: h.image,
+    rating: h.rating,
+    isFavorite: false,
+  }));
 
-const galleryStyles: HairstyleCard[] = [
-  {
-    id: '3',
-    title: 'Classic Bob',
-    image: 'https://storage.googleapis.com/uxpilot-auth.appspot.com/caf64ff634-85b3d6d14184ab5b5420.png',
-    rating: 4.9,
-  },
-  {
-    id: '4',
-    title: 'Messy Bun',
-    image: 'https://storage.googleapis.com/uxpilot-auth.appspot.com/f19fbec6a2-a8286716688b1efc3e0d.png',
-    rating: 4.7,
-  },
-  {
-    id: '5',
-    title: 'French Braid',
-    image: 'https://storage.googleapis.com/uxpilot-auth.appspot.com/fdc4d1163d-f845c06cbf8e6d217cdc.png',
-    rating: 4.8,
-  },
-  {
-    id: '6',
-    title: 'Layered Cut',
-    image: 'https://storage.googleapis.com/uxpilot-auth.appspot.com/34dec0899e-0ae9c003e72f0c865ff8.png',
-    rating: 4.5,
-  },
-  {
-    id: '7',
-    title: 'Natural Afro',
-    image: 'https://storage.googleapis.com/uxpilot-auth.appspot.com/721e0d9859-38395ace31b83273673e.png',
-    rating: 4.9,
-    isFavorite: true,
-  },
-  {
-    id: '8',
-    title: 'High Ponytail',
-    image: 'https://storage.googleapis.com/uxpilot-auth.appspot.com/7b3ed9f120-e8f99aadc54ffacd9a94.png',
-    rating: 4.6,
-  },
-  {
-    id: '9',
-    title: 'Modern Shag',
-    image: 'https://storage.googleapis.com/uxpilot-auth.appspot.com/95fc1f0ab0-83aa427db37050c868f3.png',
-    rating: 4.8,
-  },
-  {
-    id: '10',
-    title: 'Top Knot',
-    image: 'https://storage.googleapis.com/uxpilot-auth.appspot.com/6a01180e69-6cf9671b72cb85de0a7b.png',
-    rating: 4.4,
-    isFavorite: true,
-  },
-];
+const galleryStyles: HairstyleCard[] = localHairstyles
+  .filter(h => !h.trending)
+  .map(h => ({
+    id: h.id,
+    title: h.name,
+    image: h.image,
+    rating: h.rating,
+    isFavorite: false,
+  }));
 
 const categories = ['All Styles', 'Short Hair', 'Long Hair', 'Curly', 'Braids', 'Updos'];
 
@@ -187,7 +142,7 @@ export default function HomeScreen() {
       style={styles.trendingCard}
       onPress={() => handleStylePress(item.id, item.title)}
     >
-      <Image source={{ uri: item.image }} style={styles.trendingImage} />
+      <ImageWithFallback source={item.image} style={styles.trendingImage} />
       <LinearGradient
         colors={['transparent', 'rgba(0,0,0,0.6)']}
         style={styles.trendingGradient}
@@ -219,7 +174,7 @@ export default function HomeScreen() {
       style={[styles.galleryCard, index % 2 === 1 && styles.galleryCardRight]}
       onPress={() => handleStylePress(item.id, item.title)}
     >
-      <Image source={{ uri: item.image }} style={styles.galleryImage} />
+      <ImageWithFallback source={item.image} style={styles.galleryImage} />
       <LinearGradient
         colors={['transparent', 'rgba(0,0,0,0.7)']}
         style={styles.galleryGradient}
@@ -276,8 +231,8 @@ export default function HomeScreen() {
                 <TouchableOpacity style={styles.notificationButton}>
                   <Ionicons name="notifications-outline" size={22} color="#666" />
                 </TouchableOpacity>
-                <Image
-                  source={{ uri: 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-5.jpg' }}
+                <ImageWithFallback
+                  source={avatarImage}
                   style={styles.avatar}
                 />
               </View>
