@@ -1,5 +1,21 @@
-import { isCompletedQueueStatus, type QueueStatus, type RequestLog } from '@fal-ai/client';
+import { isCompletedQueueStatus, type QueueStatus } from '@fal-ai/client';
 import { getFalClient } from './fal-client';
+import {
+  cacheCompletedResult,
+  cacheStatusResponse,
+  getCachedResult,
+  getCachedStatusResponse,
+  invalidateTryOnCaches,
+} from './try-on-cache';
+import type {
+  GetHairstyleGenerationStatusOptions,
+  GetHairstyleGenerationStatusResponse,
+  HairstyleGenerationRequest,
+  HairstyleGenerationResult,
+  SubmitHairstyleGenerationResponse,
+  TryOnState,
+} from './try-on-types';
+import { executeWithFalRetry } from './fal-retry';
 
 const DEFAULT_MODEL_ID = 'fal-ai/nano-banana/edit';
 
@@ -10,72 +26,12 @@ const modelId = rawModelId
     : `fal-ai/${rawModelId}`
   : DEFAULT_MODEL_ID;
 
-type OutputFormat = 'jpeg' | 'png';
-export type TryOnState = 'queued' | 'processing' | 'completed';
-
-type QueuePriority = 'low' | 'normal';
-
 interface NanoBananaInputPayload {
   prompt: string;
   image_urls: string[];
   num_images?: number;
-  output_format?: OutputFormat;
+  output_format?: 'jpeg' | 'png';
   sync_mode?: boolean;
-}
-
-export interface HairstyleGenerationRequest {
-  prompt: string;
-  imageUrls: string[];
-  numImages?: number;
-  outputFormat?: OutputFormat;
-  syncMode?: boolean;
-  priority?: QueuePriority;
-  webhookUrl?: string;
-  hint?: string;
-}
-
-export interface HairstyleGenerationResultImage {
-  url: string;
-}
-
-export interface HairstyleGenerationResult {
-  images: HairstyleGenerationResultImage[];
-  description: string;
-}
-
-export interface QueueMetadata {
-  requestId: string;
-  statusUrl: string;
-  responseUrl: string;
-  cancelUrl: string;
-  rawStatus: QueueStatus['status'];
-}
-
-export interface HairstyleGenerationMetrics {
-  inferenceTime: number | null;
-}
-
-export interface HairstyleGenerationJob {
-  id: string;
-  modelId: string;
-  status: TryOnState;
-  queuePosition?: number;
-  logs?: RequestLog[];
-  metrics?: HairstyleGenerationMetrics;
-}
-
-export interface SubmitHairstyleGenerationResponse {
-  job: HairstyleGenerationJob;
-  queue: QueueMetadata;
-}
-
-export interface GetHairstyleGenerationStatusOptions {
-  includeResult?: boolean;
-  logs?: boolean;
-}
-
-export interface GetHairstyleGenerationStatusResponse extends SubmitHairstyleGenerationResponse {
-  result?: HairstyleGenerationResult;
 }
 
 export const getModelId = () => modelId;
@@ -84,36 +40,82 @@ export const submitHairstyleGeneration = async (
   input: HairstyleGenerationRequest,
 ): Promise<SubmitHairstyleGenerationResponse> => {
   const client = getFalClient();
-  const queueStatus = await client.queue.submit(modelId, {
-    input: buildNanoBananaInput(input),
-    priority: input.priority,
-    webhookUrl: input.webhookUrl,
-    hint: input.hint,
-  });
+  const queueStatus = await executeWithFalRetry(
+    () =>
+      client.queue.submit(modelId, {
+        input: buildNanoBananaInput(input),
+        priority: input.priority,
+        webhookUrl: input.webhookUrl,
+        hint: input.hint,
+      }),
+    { operation: 'queue.submit' },
+  );
 
-  return normalizeQueueStatus(queueStatus);
+  const normalized = normalizeQueueStatus(queueStatus);
+  await cacheStatusResponse(normalized);
+
+  return normalized;
 };
 
 export const getHairstyleGenerationStatus = async (
   requestId: string,
   options: GetHairstyleGenerationStatusOptions = {},
 ): Promise<GetHairstyleGenerationStatusResponse> => {
-  const client = getFalClient();
-  const queueStatus = await client.queue.status(modelId, {
-    requestId,
-    logs: options.logs,
-  });
+  const includeResult = options.includeResult !== false;
 
-  const normalized = normalizeQueueStatus(queueStatus);
-
-  if (options.includeResult !== false && isCompletedQueueStatus(queueStatus)) {
-    const { data } = await client.queue.result<HairstyleGenerationResult>(modelId, {
-      requestId,
-    });
-    normalized.result = data;
+  if (!options.logs) {
+    const cached = await getCachedStatusResponse(requestId, includeResult);
+    if (cached) {
+      return cached;
+    }
   }
 
-  return normalized;
+  const client = getFalClient();
+
+  try {
+    const queueStatus = await executeWithFalRetry(
+      () =>
+        client.queue.status(modelId, {
+          requestId,
+          logs: options.logs,
+        }),
+      { operation: 'queue.status' },
+    );
+
+    const normalized = normalizeQueueStatus(queueStatus);
+
+    if (!options.logs) {
+      await cacheStatusResponse(normalized);
+    }
+
+    if (includeResult) {
+      if (isCompletedQueueStatus(queueStatus)) {
+        const { data } = await executeWithFalRetry(
+          () =>
+            client.queue.result<HairstyleGenerationResult>(modelId, {
+              requestId,
+            }),
+          { operation: 'queue.result' },
+        );
+        normalized.result = data;
+
+        await cacheCompletedResult(requestId, data);
+      } else if (!options.logs) {
+        const cachedResult = await getCachedResult(requestId);
+        if (cachedResult) {
+          normalized.result = cachedResult;
+        }
+      }
+    }
+
+    return normalized;
+  } catch (error) {
+    if (!options.logs) {
+      await invalidateTryOnCaches(requestId);
+    }
+
+    throw error;
+  }
 };
 
 const mapQueueStatus = (status: QueueStatus['status']): TryOnState => {
@@ -131,8 +133,8 @@ const mapQueueStatus = (status: QueueStatus['status']): TryOnState => {
 
 const normalizeQueueStatus = (
   status: QueueStatus,
-): GetHairstyleGenerationStatusResponse => {
-  const job: HairstyleGenerationJob = {
+): SubmitHairstyleGenerationResponse => {
+  const job: SubmitHairstyleGenerationResponse['job'] = {
     id: status.request_id,
     modelId,
     status: mapQueueStatus(status.status),
@@ -194,3 +196,12 @@ const buildNanoBananaInput = (
 
   return payload;
 };
+
+export type {
+  GetHairstyleGenerationStatusOptions,
+  GetHairstyleGenerationStatusResponse,
+  HairstyleGenerationRequest,
+  HairstyleGenerationResult,
+  SubmitHairstyleGenerationResponse,
+  TryOnState,
+} from './try-on-types';

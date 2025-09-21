@@ -9,6 +9,7 @@ import {
   type QueueMetadata,
 } from '../../services/hairstyle-generation';
 import { FalClientConfigError } from '../../services/fal-client';
+import { FalCircuitOpenError } from '../../services/fal-retry';
 import { isValidRemoteUrl, type UrlValidationFailureReason } from '../../utils/url-validation';
 
 const allowedOutputFormats = new Set(['jpeg', 'png']);
@@ -417,6 +418,16 @@ const handleError = (error: unknown, c: Context) => {
         error: 'TRY_ON_SERVICE_UNAVAILABLE',
         message: 'AI try-on service is not configured',
         detail: error.message,
+      },
+      503,
+    );
+  }
+
+  if (error instanceof FalCircuitOpenError) {
+    return c.json(
+      {
+        error: 'TRY_ON_SERVICE_THROTTLED',
+        message: 'AI try-on service is temporarily unavailable. Please wait and try again.',
       },
       503,
     );

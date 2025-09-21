@@ -49,6 +49,9 @@ Develop with Node 18+ and Bun 1.2.x. Each app requires specific environment vari
 - `FAL_MODEL_ID` - Set to "nano-banana/edit" for hairstyle editing
 - `FRONTEND_URL` - Mobile app URL for CORS
 - `FAL_ALLOWED_IMAGE_HOSTS` (optional) - Comma-separated host whitelist enforced during image URL validation
+- `REDIS_URL` (optional) - Full Redis connection string; defaults to `redis://127.0.0.1:6378`
+- `REDIS_HOST` / `REDIS_PORT` (optional) - Override Redis host/port when not using `REDIS_URL` (port defaults to `6378`)
+- `FAL_RETRY_MAX_ATTEMPTS`, `FAL_RETRY_BASE_DELAY_MS`, `FAL_RETRY_MAX_DELAY_MS`, `FAL_CIRCUIT_FAILURE_THRESHOLD`, `FAL_CIRCUIT_OPEN_MS` (optional) - Tune retry/backoff + circuit breaker behaviour
 
 ### Mobile Environment (`apps/mobile/.env`):
 - `EXPO_PUBLIC_API_URL` - Backend API URL
@@ -58,6 +61,7 @@ Develop with Node 18+ and Bun 1.2.x. Each app requires specific environment vari
 - Never commit secrets; update `.env.example` instead. For deployment, use secure environment variable management.
 - If `FAL_API_KEY` is missing, fal.ai-powered endpoints now return a 503 rather than crashing the API process.
 - Try-on routes enforce 32KB body size limit, cap image URLs at 10, rate-limit clients (20/min) and allow at most five active queue jobs per client.
+- Redis-backed caching (6378 by default) stores queue status for 5s and completed results for 24h; fal.ai calls use exponential backoff with a circuit breaker.
 
 ## PRD Success Metrics (Hackathon Goals)
 - **User Metrics**: 200+ sign-ups, 100+ completed try-ons in week 1

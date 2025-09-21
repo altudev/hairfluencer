@@ -90,6 +90,12 @@ GOOGLE_CLIENT_SECRET=your-google-client-secret
 FAL_API_KEY=your-fal-api-key # when missing, try-on routes respond 503 instead of crashing
 FAL_MODEL_ID=nano-banana/edit
 FAL_ALLOWED_IMAGE_HOSTS=cdn.example.com,images.example.com # optional: restrict allowed upload hosts
+REDIS_URL=redis://127.0.0.1:6378 # optional, otherwise REDIS_HOST/REDIS_PORT (default 6378)
+FAL_RETRY_MAX_ATTEMPTS=3 # optional tuning knobs for retry/backoff/circuit breaker
+FAL_RETRY_BASE_DELAY_MS=500
+FAL_RETRY_MAX_DELAY_MS=5000
+FAL_CIRCUIT_FAILURE_THRESHOLD=5
+FAL_CIRCUIT_OPEN_MS=30000
 
 # Adapty Integration (mobile payments)
 ADAPTY_PUBLIC_KEY=your-adapty-public-key
@@ -129,4 +135,4 @@ ADAPTY_SECRET_KEY=your-adapty-secret-key
 - Deep linking support: `hairfluencer://`
 - CORS configured for mobile app requests
 - Google OAuth redirect handling for mobile
-- Try-on API enforces URL validation, 32KB payload limit, 10 image URL cap, basic per-client rate/queue limits
+- Try-on API enforces URL validation, 32KB payload limit, 10 image URL cap, per-client rate/queue limits, Redis status/result caching, and fal.ai retry + circuit breaker handling
