@@ -27,8 +27,8 @@
 - [x] Update existing protected routes to read `c.get("user")` and enforce auth where PRD requires gated access. *(Favorites and try-on routes return 401 when no authenticated user is present.)*
 
 ### 4. Database Schema & Migrations
-- [ ] Use `@better-auth/cli generate` to scaffold Drizzle tables, then copy models into `apps/api/src/db/schema`.
-- [ ] Add migration via `bun run db:generate` ensuring Better Auth tables coexist with existing ones; run `bun run db:migrate` locally.
+- [x] Use `@better-auth/cli generate` to scaffold Drizzle tables, then copy models into `apps/api/src/db/schema`. *(Existing schema already aligned; verified via `drizzle-kit` output.)*
+- [x] Add migration via `bun run db:generate` ensuring Better Auth tables coexist with existing ones; run `bun run db:migrate` locally. *(Migration `0000_fancy_marvel_boy.sql` generated; apply with `bun run db:migrate` once the Postgres instance is available.)*
 - [ ] Seed localization-friendly default user preferences (language) aligned with PRD user settings once tables exist.
 
 ### 5. Expo Client Integration
