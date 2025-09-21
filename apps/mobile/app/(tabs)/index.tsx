@@ -17,6 +17,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons, MaterialIcons, FontAwesome } from '@expo/vector-icons';
 import Constants from 'expo-constants';
+import { useRouter } from 'expo-router';
 
 const { width } = Dimensions.get('window');
 
@@ -99,6 +100,7 @@ const galleryStyles: HairstyleCard[] = [
 const categories = ['All Styles', 'Short Hair', 'Long Hair', 'Curly', 'Braids', 'Updos'];
 
 export default function HomeScreen() {
+  const router = useRouter();
   const [selectedCategory, setSelectedCategory] = useState('All Styles');
   const [searchText, setSearchText] = useState('');
   const [favorites, setFavorites] = useState<Set<string>>(new Set(['7', '10']));
@@ -152,8 +154,19 @@ export default function HomeScreen() {
     return stars;
   };
 
+  const handleStylePress = (styleId: string, styleName: string) => {
+    router.push({
+      pathname: '/upload',
+      params: { styleId, styleName }
+    });
+  };
+
   const renderTrendingCard = ({ item }: { item: HairstyleCard }) => (
-    <TouchableOpacity activeOpacity={0.9} style={styles.trendingCard}>
+    <TouchableOpacity
+      activeOpacity={0.9}
+      style={styles.trendingCard}
+      onPress={() => handleStylePress(item.id, item.title)}
+    >
       <Image source={{ uri: item.image }} style={styles.trendingImage} />
       <LinearGradient
         colors={['transparent', 'rgba(0,0,0,0.6)']}
@@ -165,7 +178,10 @@ export default function HomeScreen() {
             <View style={styles.starsContainer}>{renderStars(item.rating)}</View>
             <Text style={styles.ratingText}>{item.rating}</Text>
           </View>
-          <TouchableOpacity onPress={() => toggleFavorite(item.id)}>
+          <TouchableOpacity onPress={(e) => {
+            e.stopPropagation();
+            toggleFavorite(item.id);
+          }}>
             <FontAwesome
               name={favorites.has(item.id) ? 'heart' : 'heart-o'}
               size={16}
@@ -181,6 +197,7 @@ export default function HomeScreen() {
     <TouchableOpacity
       activeOpacity={0.9}
       style={[styles.galleryCard, index % 2 === 1 && styles.galleryCardRight]}
+      onPress={() => handleStylePress(item.id, item.title)}
     >
       <Image source={{ uri: item.image }} style={styles.galleryImage} />
       <LinearGradient
@@ -193,7 +210,10 @@ export default function HomeScreen() {
             <View style={styles.starsContainer}>{renderStars(item.rating)}</View>
             <Text style={styles.ratingText}>{item.rating}</Text>
           </View>
-          <TouchableOpacity onPress={() => toggleFavorite(item.id)}>
+          <TouchableOpacity onPress={(e) => {
+            e.stopPropagation();
+            toggleFavorite(item.id);
+          }}>
             <FontAwesome
               name={favorites.has(item.id) ? 'heart' : 'heart-o'}
               size={14}
