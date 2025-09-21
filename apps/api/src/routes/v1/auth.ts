@@ -9,14 +9,21 @@ export const createAuthRoutes = () => {
 
   const origin = process.env.FRONTEND_URL || DEFAULT_FRONTEND_URL;
 
-  app.use('/auth/*', cors({
+  const corsConfig = cors({
     origin,
     credentials: true,
     allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowHeaders: ['Content-Type', 'Authorization'],
-  }));
+  });
 
-  app.on(['GET', 'POST'], '/auth/*', (c) => {
+  app.use('/*', corsConfig);
+  app.use('/', corsConfig);
+
+  app.all('/*', (c) => {
+    return auth.handler(c.req.raw);
+  });
+
+  app.all('/', (c) => {
     return auth.handler(c.req.raw);
   });
 
