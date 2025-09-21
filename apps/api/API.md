@@ -210,6 +210,16 @@ Required environment variables for the API:
 | `GOOGLE_CLIENT_SECRET` | Google OAuth client secret | `GOCSPX-xxxxxxxxxxxxx` |
 | `FAL_API_KEY` | FAL.ai API key for AI transformations | `your-fal-api-key` |
 | `FAL_MODEL_ID` | FAL.ai model identifier | `nano-banana/edit` |
+| `AWS_REGION` | AWS region for S3 buckets | `us-east-1` |
+| `AWS_S3_UPLOAD_BUCKET` | Private bucket for raw selfie uploads | `hairfluencer-uploads-dev` |
+| `AWS_S3_PROCESSED_BUCKET` | Private bucket for processed results | `hairfluencer-processed-dev` |
+| `S3_MAX_UPLOAD_BYTES` | Maximum selfie size in bytes (default 16 MB) | `16777216` |
+| `S3_UPLOAD_URL_TTL_SECONDS` | TTL for pre-signed upload URLs (default 5 minutes) | `300` |
+| `S3_DOWNLOAD_URL_TTL_SECONDS` | TTL for pre-signed GET URLs (default 5 minutes) | `300` |
+| `S3_UPLOAD_RETENTION_HOURS` | Hours before raw uploads are expired | `24` |
+| `S3_RESULT_RETENTION_DAYS` | Days before processed results are expired | `7` |
+| `S3_MAX_RETRY_ATTEMPTS` | Max retry attempts for fal.ai or S3 operations | `3` |
+| `S3_RETRY_BACKOFF_SECONDS` | Base seconds for exponential backoff | `2` |
 | `ADAPTY_PUBLIC_KEY` | Adapty public SDK key | `public.adapty.xxxxx` |
 | `ADAPTY_SECRET_KEY` | Adapty server-side secret key | `secret.adapty.xxxxx` |
 
