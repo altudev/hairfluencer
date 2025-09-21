@@ -17,6 +17,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import Constants from 'expo-constants';
 import { UploadScreenSkeleton } from '@/components/LoadingSkeletons';
+import { requestCameraPermission, requestGalleryPermission } from '@/utils/permissions';
 
 const { width, height } = Dimensions.get('window');
 
@@ -37,10 +38,9 @@ export default function UploadScreen() {
   }, []);
 
   const pickImageFromGallery = async () => {
-    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    const permissionResult = await requestGalleryPermission();
 
     if (!permissionResult.granted) {
-      Alert.alert('Permission Required', 'Please allow access to your photo library to continue.');
       return;
     }
 
@@ -57,10 +57,9 @@ export default function UploadScreen() {
   };
 
   const takePhoto = async () => {
-    const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
+    const permissionResult = await requestCameraPermission();
 
     if (!permissionResult.granted) {
-      Alert.alert('Permission Required', 'Please allow access to your camera to continue.');
       return;
     }
 

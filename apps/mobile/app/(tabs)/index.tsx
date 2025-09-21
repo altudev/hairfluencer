@@ -233,6 +233,12 @@ export default function HomeScreen() {
                 <Text style={styles.appTitle}>Hairfluencer</Text>
               </View>
               <View style={styles.headerActions}>
+                <TouchableOpacity
+                  style={styles.notificationButton}
+                  onPress={() => router.push('/privacy-settings')}
+                >
+                  <Ionicons name="shield-checkmark-outline" size={22} color="#666" />
+                </TouchableOpacity>
                 <TouchableOpacity style={styles.notificationButton}>
                   <Ionicons name="notifications-outline" size={22} color="#666" />
                 </TouchableOpacity>
