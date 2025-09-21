@@ -4,10 +4,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Hairfluencer is a Turborepo monorepo project with three main applications:
-- **Web**: Next.js 15 application with Turbopack
-- **API**: Bun-based Hono server with Drizzle ORM for database access
-- **Mobile**: Expo React Native application
+Hairfluencer is an AI-powered hairstyle try-on application built as a hackathon MVP. Users can upload selfies and instantly visualize new haircuts and colors using AI transformation, with support for English and Spanish languages.
+
+### Architecture
+- **Turborepo Monorepo**: Three main applications sharing configurations
+- **Mobile App**: Expo React Native app (primary client) - AI hairstyle visualization
+- **API Server**: Bun + Hono with Better Auth & Drizzle ORM - handles auth, photo uploads, AI orchestration
+- **Web Admin**: Next.js 15 with Turbopack - admin panel for managing hairstyle gallery
 
 ## Development Commands
 
@@ -45,21 +48,45 @@ bun lint             # Run Expo lint
 bun reset-project    # Reset to blank project template
 ```
 
-## Architecture
+## Tech Stack
 
-### Tech Stack
+### Core Technologies
 - **Package Manager**: Bun (v1.2.22)
 - **Monorepo Tool**: Turborepo with workspaces (apps/*, packages/*)
-- **Web Framework**: Next.js 15 with Turbopack, React 19, Tailwind CSS v4
-- **API Framework**: Hono on Bun runtime
-- **Database**: PostgreSQL with Drizzle ORM
 - **Mobile Framework**: Expo with React Native, expo-router for navigation
+- **API Framework**: Hono on Bun runtime with Better Auth
+- **Database**: PostgreSQL with Drizzle ORM
+- **Admin Panel**: Next.js 15 with Turbopack, React 19, Tailwind CSS v4
+- **Authentication**: Better Auth with email/password and Google OAuth
+- **AI Integration**: Nano Bana Image AI (external API for hairstyle transformation)
 
-### Database Setup
-- Drizzle ORM configuration in `apps/api/drizzle.config.ts`
+### Database & Authentication
+- **Drizzle ORM** configuration in `apps/api/drizzle.config.ts`
+- **Better Auth** configuration in `apps/api/src/auth.ts`
 - Schema definitions in `apps/api/src/db/schemas/`
 - Migrations stored in `apps/api/src/db/migrations/`
-- Requires `DATABASE_URL` or `DRIZZLE_DATABASE_URL` environment variable
+- Authentication tables: `user`, `session`, `account`, `verification`
+- Google OAuth support for mobile app login
+
+### Environment Variables Required
+```bash
+# Database
+DATABASE_URL=postgres://user:password@localhost:5432/hairfluencer
+DRIZZLE_DATABASE_URL=postgres://user:password@localhost:5432/hairfluencer
+
+# Authentication
+BETTER_AUTH_SECRET=minimum-32-character-secret-key
+BETTER_AUTH_URL=http://localhost:3000
+FRONTEND_URL=http://localhost:3000
+
+# Google OAuth (for mobile app)
+GOOGLE_CLIENT_ID=your-google-client-id
+GOOGLE_CLIENT_SECRET=your-google-client-secret
+
+# AI Service (to be added)
+NANO_BANA_API_KEY=your-api-key
+NANO_BANA_API_URL=https://api.nanobana.ai
+```
 
 ### Shared Packages
 - `packages/eslint-config`: Shared ESLint configurations
@@ -70,3 +97,27 @@ bun reset-project    # Reset to blank project template
 - Build outputs: `.next/**` for Next.js
 - Environment variables loaded from `.env*` files
 - Caching enabled for build and lint tasks
+
+## Key Features (PRD Requirements)
+
+### Core Functionality
+1. **AI Hairstyle Try-On**: Upload selfie → Select style → AI transformation
+2. **Dual Language Support**: English and Spanish UI localization
+3. **Authentication**: Email/password and Google OAuth (mobile optimized)
+4. **Favorites System**: Save and manage favorite hairstyle results
+5. **Admin Panel**: Manage hairstyle gallery and view usage statistics
+
+### API Endpoints
+- **Auth**: `/api/auth/*` (sign-up, sign-in, sign-out, google, session)
+- **Health**: `/api/health` - System health check
+- **Upload**: `/api/upload` (to be implemented) - Photo upload
+- **Styles**: `/api/styles` (to be implemented) - Hairstyle gallery
+- **Transform**: `/api/transform` (to be implemented) - AI processing
+- **Favorites**: `/api/favorites` (to be implemented) - User favorites
+
+### Mobile App Considerations
+- Session duration: 7 days (optimized for mobile usage)
+- Trusted origins configured for Expo development
+- Deep linking support: `hairfluencer://`
+- CORS configured for mobile app requests
+- Google OAuth redirect handling for mobile

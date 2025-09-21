@@ -1,12 +1,15 @@
 # API Documentation - Hairfluencer
 
+AI-powered hairstyle try-on application backend API for mobile and web clients.
+
 ## Base URL
 - Development: `http://localhost:3000`
 - Production: Configure via `BETTER_AUTH_URL` environment variable
+- Mobile Expo Dev: `exp://localhost:8081`
 
 ## Authentication Endpoints
 
-All authentication endpoints are prefixed with `/api/auth/`
+All authentication endpoints are prefixed with `/api/auth/`. The API supports both email/password and Google OAuth authentication optimized for mobile app usage.
 
 ### Register User
 **POST** `/api/auth/sign-up`
@@ -125,6 +128,35 @@ Headers: {
 }
 ```
 
+### Google OAuth Login
+**GET** `/api/auth/google`
+
+Initiate Google OAuth flow for mobile app login.
+
+```json
+// Request
+// Redirect user to this endpoint in mobile WebView or browser
+
+// Response
+// Redirects to Google OAuth consent page
+// After consent, redirects to: /api/auth/callback/google
+```
+
+### Google OAuth Callback
+**GET** `/api/auth/callback/google`
+
+Handle Google OAuth callback (automatically processed).
+
+```json
+// Response - Success
+// Redirects to mobile app with deep link:
+// hairfluencer://auth?token=<session-token>&user=<user-data>
+
+// Response - Error
+// Redirects to mobile app with error:
+// hairfluencer://auth?error=<error-message>
+```
+
 ## Health Check Endpoint
 
 ### System Health
@@ -158,9 +190,14 @@ Required environment variables for the API:
 | Variable | Description | Example |
 |----------|-------------|---------|
 | `DATABASE_URL` | PostgreSQL connection string | `postgres://user:pass@localhost:5432/hairfluencer` |
+| `DRIZZLE_DATABASE_URL` | Alternative DB URL for migrations | `postgres://user:pass@localhost:5432/hairfluencer` |
 | `BETTER_AUTH_SECRET` | Secret key for auth (min 32 chars) | `your-super-secret-key-minimum-32-characters` |
 | `BETTER_AUTH_URL` | Base URL for auth callbacks | `http://localhost:3000` |
 | `FRONTEND_URL` | Frontend URL for CORS | `http://localhost:3000` |
+| `GOOGLE_CLIENT_ID` | Google OAuth client ID | `123456.apps.googleusercontent.com` |
+| `GOOGLE_CLIENT_SECRET` | Google OAuth client secret | `GOCSPX-xxxxxxxxxxxxx` |
+| `NANO_BANA_API_KEY` | AI service API key (pending) | `your-api-key` |
+| `NANO_BANA_API_URL` | AI service endpoint (pending) | `https://api.nanobana.ai/v1` |
 
 ## Error Handling
 
@@ -184,15 +221,23 @@ Common HTTP status codes:
 - `500` - Internal Server Error
 - `503` - Service Unavailable (database issues)
 
-## CORS Configuration
+## CORS & Mobile App Configuration
 
-The API is configured to accept requests from the frontend URL specified in the `FRONTEND_URL` environment variable.
+The API is configured to accept requests from mobile apps and web clients.
 
-Default CORS settings:
-- Origin: `FRONTEND_URL` or `http://localhost:3000`
+### CORS Settings:
+- Origins:
+  - `FRONTEND_URL` (web admin)
+  - `exp://localhost:8081` (Expo development)
+  - `hairfluencer://` (mobile app deep links)
 - Credentials: Enabled
 - Allowed Methods: `GET`, `POST`, `PUT`, `DELETE`, `OPTIONS`
 - Allowed Headers: `Content-Type`, `Authorization`
+
+### Mobile-Specific Settings:
+- Session duration: 7 days (optimized for mobile usage)
+- Deep link support for OAuth callbacks
+- Token-based authentication for API calls
 
 ## Rate Limiting
 

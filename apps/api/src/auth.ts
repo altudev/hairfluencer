@@ -20,6 +20,12 @@ if (process.env.BETTER_AUTH_SECRET && process.env.BETTER_AUTH_SECRET.length < 32
   console.warn('WARNING: BETTER_AUTH_SECRET should be at least 32 characters for production');
 }
 
+// Check for Google OAuth credentials
+const googleEnabled = process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET;
+if (!googleEnabled) {
+  console.warn('Google OAuth is disabled. Set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET to enable.');
+}
+
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
     provider: "pg", // PostgreSQL provider
@@ -30,10 +36,21 @@ export const auth = betterAuth({
     maxPasswordLength: 128,
   },
   session: {
-    expiresIn: 60 * 60 * 24 * 7,  // 7 days
+    expiresIn: 60 * 60 * 24 * 7,  // 7 days for mobile app
     updateAge: 60 * 60 * 24,       // Update session every 24 hours
   },
   socialProviders: {
-    // Add social providers later if needed
+    google: googleEnabled ? {
+      clientId: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+      redirectURI: `${process.env.BETTER_AUTH_URL}/api/auth/callback/google`,
+      scope: ['email', 'profile'],
+    } : undefined,
   },
+  // Mobile app specific settings
+  trustedOrigins: [
+    process.env.FRONTEND_URL || 'http://localhost:3000',
+    'exp://localhost:8081', // Expo development
+    'hairfluencer://', // Mobile app deep link
+  ],
 });
