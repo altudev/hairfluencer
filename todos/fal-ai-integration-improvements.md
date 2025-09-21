@@ -106,16 +106,16 @@ const CACHE_TTL = 5000; // 5 seconds
 ## 📚 Documentation
 
 ### API Documentation
-- [ ] Document POST /api/v1/try-ons endpoint
-- [ ] Document GET /api/v1/try-ons/:jobId endpoint
+- [x] Document POST /api/v1/try-ons endpoint
+- [x] Document GET /api/v1/try-ons/:jobId endpoint
 - [ ] Add OpenAPI/Swagger specification
 - [ ] Create integration guide for mobile app
 
 ### Environment Setup
-- [ ] Update .env.example with new variables
+- [x] Update .env.example with new variables
 - [ ] Document FAL.ai account setup
-- [ ] Add troubleshooting guide
-- [ ] Document rate limits and quotas
+- [x] Add troubleshooting guide
+- [x] Document rate limits and quotas
 
 ---
 
