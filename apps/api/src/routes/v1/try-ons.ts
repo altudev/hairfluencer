@@ -9,6 +9,7 @@ import {
   type QueueMetadata,
 } from '../../services/hairstyle-generation';
 import { FalClientConfigError } from '../../services/fal-client';
+import { isValidRemoteUrl, type UrlValidationFailureReason } from '../../utils/url-validation';
 
 const allowedOutputFormats = new Set(['jpeg', 'png']);
 const allowedPriorities = new Set(['low', 'normal']);
@@ -155,6 +156,14 @@ const parseSubmitPayload = (payload: unknown): HairstyleGenerationRequest => {
 
   if (sanitizedImageUrls.length === 0) {
     throw new TryOnValidationError('imageUrls', 'imageUrls cannot be empty');
+  }
+
+  for (const url of sanitizedImageUrls) {
+    const validation = isValidRemoteUrl(url);
+
+    if (!validation.valid) {
+      throw new TryOnValidationError('imageUrls', mapUrlError(validation.reason));
+    }
   }
 
   if (numImages !== undefined) {
@@ -326,4 +335,21 @@ const extractFalErrorMessage = (error: ApiError<any>) => {
   }
 
   return error.message || 'fal.ai request failed';
+};
+
+const mapUrlError = (reason: UrlValidationFailureReason) => {
+  switch (reason) {
+    case 'URL_INVALID_LENGTH':
+      return 'image URL exceeds maximum allowed length';
+    case 'URL_MALFORMED':
+      return 'image URL must be a valid URL';
+    case 'URL_PROTOCOL_NOT_ALLOWED':
+      return 'image URL must use http or https';
+    case 'URL_PRIVATE_HOST':
+      return 'image URL host is not allowed';
+    case 'URL_HOST_NOT_WHITELISTED':
+      return 'image URL host is not whitelisted';
+    default:
+      return 'invalid image URL';
+  }
 };
