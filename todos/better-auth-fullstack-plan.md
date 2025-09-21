@@ -16,8 +16,8 @@
 
 ### 2. Backend (Hono) Better Auth Instance
 - [ ] Create `apps/api/src/lib/auth.ts` (or similar) instantiating `betterAuth` with the Drizzle adapter, pointing at existing `db` instance.
-- [ ] Enable `emailAndPassword` and configure Google social provider using `process.env` keys; add additional plugins (e.g., `expo()`) for native deep link handling.
-- [ ] Configure `trustedOrigins` to include Expo scheme(s), web admin origin, and staging domains as defined in product rollout.
+- [x] Enable `emailAndPassword` and configure Google social provider using `process.env` keys; add additional plugins (e.g., `expo()`) for native deep link handling. *(`apps/api/src/auth.ts` mounts `expo()` plugin and reads Google creds from env.)*
+- [x] Configure `trustedOrigins` to include Expo scheme(s), web admin origin, and staging domains as defined in product rollout. *(Reads `BETTER_AUTH_TRUSTED_ORIGINS`, Expo dev URL, and deep link scheme from env.)*
 - [ ] Expose helper exports (`auth`, `auth.api`, `auth.$Infer`) for use across routes, middleware, and background jobs.
 
 ### 3. API Routing & Middleware Integration
@@ -37,6 +37,7 @@
 - [ ] Configure `metro.config.js` (`unstable_enablePackageExports`) and adjust `babel.config.js` aliases only if Metro config fails.
 - [ ] Implement shared auth hooks/provider exposing `authClient.useSession()` to screens and guard navigation flows.
 - [ ] Update sign-in/up UI to call `authClient.signIn.email`, `authClient.signUp.email`, and social helpers; handle error messaging per PRD UX guidelines.
+- [x] Extend environment validation to cover `EXPO_PUBLIC_*` auth keys and deep link settings so mobile builds surface misconfiguration early.
 
 ### 6. Cross-App Coordination & QA
 - [ ] Verify mobile → API handshake (cookies stored via SecureStore, `credentials:"omit"` on fetch) and server CORS accepts Expo dev origins.
