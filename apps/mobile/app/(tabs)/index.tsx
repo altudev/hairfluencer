@@ -21,6 +21,7 @@ import { useRouter } from 'expo-router';
 import useStore from '@/stores/useStore';
 import { HomeScreenSkeleton } from '@/components/LoadingSkeletons';
 import ImageWithFallback from '@/components/ImageWithFallback';
+import OptimizedImage from '@/components/OptimizedImage';
 import { hairstyles as localHairstyles, avatarImage } from '@/assets/images/hairstyleData';
 
 const { width } = Dimensions.get('window');
@@ -142,7 +143,7 @@ export default function HomeScreen() {
       style={styles.trendingCard}
       onPress={() => handleStylePress(item.id, item.title)}
     >
-      <ImageWithFallback source={item.image} style={styles.trendingImage} />
+      <OptimizedImage source={item.image} style={styles.trendingImage} priority="high" />
       <LinearGradient
         colors={['transparent', 'rgba(0,0,0,0.6)']}
         style={styles.trendingGradient}
@@ -174,7 +175,11 @@ export default function HomeScreen() {
       style={[styles.galleryCard, index % 2 === 1 && styles.galleryCardRight]}
       onPress={() => handleStylePress(item.id, item.title)}
     >
-      <ImageWithFallback source={item.image} style={styles.galleryImage} />
+      <OptimizedImage
+        source={item.image}
+        style={styles.galleryImage}
+        priority={index < 4 ? "normal" : "low"}
+      />
       <LinearGradient
         colors={['transparent', 'rgba(0,0,0,0.7)']}
         style={styles.galleryGradient}
@@ -231,9 +236,10 @@ export default function HomeScreen() {
                 <TouchableOpacity style={styles.notificationButton}>
                   <Ionicons name="notifications-outline" size={22} color="#666" />
                 </TouchableOpacity>
-                <ImageWithFallback
+                <OptimizedImage
                   source={avatarImage}
                   style={styles.avatar}
+                  priority="low"
                 />
               </View>
             </View>
@@ -293,20 +299,28 @@ export default function HomeScreen() {
               renderItem={renderTrendingCard}
               keyExtractor={(item) => item.id}
               contentContainerStyle={styles.trendingList}
+              getItemLayout={(data, index) => ({
+                length: 280,
+                offset: 280 * index,
+                index,
+              })}
+              initialNumToRender={2}
+              maxToRenderPerBatch={3}
+              windowSize={5}
+              removeClippedSubviews={true}
             />
           </View>
 
           {/* Main Gallery */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Discover Your Style</Text>
-            <FlatList
-              data={galleryStyles}
-              renderItem={renderGalleryCard}
-              keyExtractor={(item) => item.id}
-              numColumns={2}
-              columnWrapperStyle={styles.galleryRow}
-              scrollEnabled={false}
-            />
+            <View style={styles.galleryGrid}>
+              {galleryStyles.map((item, index) => (
+                <View key={item.id} style={styles.galleryItemWrapper}>
+                  {renderGalleryCard({ item, index })}
+                </View>
+              ))}
+            </View>
           </View>
 
           {/* Footer */}
@@ -540,6 +554,15 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: 'white',
     marginLeft: 4,
+  },
+  galleryGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
+  galleryItemWrapper: {
+    width: (width - 48) / 2,
+    marginBottom: 16,
   },
   galleryRow: {
     justifyContent: 'space-between',
