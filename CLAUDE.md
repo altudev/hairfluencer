@@ -10,6 +10,7 @@ Hairfluencer is an AI-powered hairstyle try-on application built as a hackathon 
 - **Turborepo Monorepo**: Three main applications sharing configurations
 - **Mobile App**: Expo React Native app (primary client) - AI hairstyle visualization
 - **API Server**: Bun + Hono with Better Auth & Drizzle ORM - handles auth, photo uploads, AI orchestration
+  - Shared service layer in `apps/api/src/services/`; `hairstyle-generation.ts` centralizes fal.ai queue calls so routes just validate/serialize.
 - **Web Admin**: Next.js 15 with Turbopack - admin panel for managing hairstyle gallery
 
 ## Development Commands
@@ -86,7 +87,7 @@ GOOGLE_CLIENT_ID=your-google-client-id
 GOOGLE_CLIENT_SECRET=your-google-client-secret
 
 # FAL.ai Integration (AI hairstyle transformation)
-FAL_API_KEY=your-fal-api-key
+FAL_API_KEY=your-fal-api-key # when missing, try-on routes respond 503 instead of crashing
 FAL_MODEL_ID=nano-banana/edit
 
 # Adapty Integration (mobile payments)
