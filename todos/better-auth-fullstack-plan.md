@@ -15,14 +15,14 @@
 - [ ] Review PRD privacy notes; document retention policy messaging in onboarding copy once auth flows go live.
 
 ### 2. Backend (Hono) Better Auth Instance
-- [ ] Create `apps/api/src/lib/auth.ts` (or similar) instantiating `betterAuth` with the Drizzle adapter, pointing at existing `db` instance.
+- [x] Create `apps/api/src/auth.ts` instantiating `betterAuth` with the Drizzle adapter, pointing at existing `db` instance. *(Located at `apps/api/src/auth.ts`; refined to include Expo plugin support.)*
 - [x] Enable `emailAndPassword` and configure Google social provider using `process.env` keys; add additional plugins (e.g., `expo()`) for native deep link handling. *(`apps/api/src/auth.ts` mounts `expo()` plugin and reads Google creds from env.)*
 - [x] Configure `trustedOrigins` to include Expo scheme(s), web admin origin, and staging domains as defined in product rollout. *(Reads `BETTER_AUTH_TRUSTED_ORIGINS`, Expo dev URL, and deep link scheme from env.)*
-- [ ] Expose helper exports (`auth`, `auth.api`, `auth.$Infer`) for use across routes, middleware, and background jobs.
+- [x] Expose helper exports (`auth`, `auth.api`, `auth.$Infer`) for use across routes, middleware, and background jobs. *(`apps/api/src/auth.ts` now exports `authHandler`, `authApi`, and `authInfer` along with `AUTH_TRUSTED_ORIGINS`.)*
 
 ### 3. API Routing & Middleware Integration
-- [ ] Mount Better Auth handler inside main Hono app (`app.on(["POST","GET"], "/api/auth/*", ...)`) before other auth-sensitive routes.
-- [ ] Register `cors` middleware ahead of the handler using `FRONTEND_URL` (mobile web) and dev Expo URLs; set `credentials: true` and allowed headers.
+- [x] Mount Better Auth handler inside main Hono app (`app.on(["POST","GET"], "/api/auth/*", ...)`) before other auth-sensitive routes. *(Mounted once in `apps/api/src/index.ts` with shared CORS middleware.)*
+- [x] Register `cors` middleware ahead of the handler using `FRONTEND_URL` (mobile web) and dev Expo URLs; set `credentials: true` and allowed headers. *(`apps/api/src/index.ts` derives HTTP origins from `AUTH_TRUSTED_ORIGINS`.)*
 - [ ] Add session enrichment middleware storing `user`/`session` on `Context` for downstream routes (e.g., hairstyle gallery, favorites).
 - [ ] Update existing protected routes to read `c.get("user")` and enforce auth where PRD requires gated access.
 
@@ -32,8 +32,8 @@
 - [ ] Seed localization-friendly default user preferences (language) aligned with PRD user settings once tables exist.
 
 ### 5. Expo Client Integration
-- [ ] Create `apps/mobile/lib/auth-client.ts` using `createAuthClient` with `expoClient`, `SecureStore`, and `EXPO_PUBLIC_API_URL`.
-- [ ] Ensure `app.json` (or `app.config.ts`) declares deep link scheme (e.g., `hairfluencer`) consistent with server `trustedOrigins`.
+- [x] Create `apps/mobile/lib/auth-client.ts` using `createAuthClient` with `expoClient`, `SecureStore`, and `EXPO_PUBLIC_API_URL`.
+- [x] Ensure `app.json` (or `app.config.ts`) declares deep link scheme (e.g., `hairfluencer`) consistent with server `trustedOrigins`.
 - [ ] Configure `metro.config.js` (`unstable_enablePackageExports`) and adjust `babel.config.js` aliases only if Metro config fails.
 - [ ] Implement shared auth hooks/provider exposing `authClient.useSession()` to screens and guard navigation flows.
 - [ ] Update sign-in/up UI to call `authClient.signIn.email`, `authClient.signUp.email`, and social helpers; handle error messaging per PRD UX guidelines.

@@ -75,3 +75,8 @@ export const auth = betterAuth({
   // Mobile app specific settings
   trustedOrigins,
 });
+
+export const AUTH_TRUSTED_ORIGINS = trustedOrigins;
+export const authHandler = auth.handler;
+export const authApi = auth.api;
+export const authInfer = auth.$Infer;
