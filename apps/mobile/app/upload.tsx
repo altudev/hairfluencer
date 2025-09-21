@@ -89,10 +89,6 @@ export default function UploadScreen() {
         colors={['#0f0f23', '#1a1a3e', '#2d1b69']}
         style={styles.gradient}
       >
-        {/* Floating orbs for visual effect */}
-        <View style={[styles.floatingOrb, styles.orb1]} />
-        <View style={[styles.floatingOrb, styles.orb2]} />
-        <View style={[styles.floatingOrb, styles.orb3]} />
 
         <ScrollView
           style={styles.scrollView}
@@ -173,51 +169,6 @@ export default function UploadScreen() {
               </View>
             )}
 
-            {/* Good/Bad Examples */}
-            <View style={styles.examplesSection}>
-              <Text style={styles.examplesTitle}>
-                <Ionicons name="checkmark-circle" size={18} color="#4CAF50" />
-                {' '}Good Photo Examples
-              </Text>
-
-              <View style={styles.examplesList}>
-                <View style={styles.exampleItem}>
-                  <View style={styles.exampleIcon}>
-                    <Ionicons name="eye" size={14} color="#FF8C42" />
-                  </View>
-                  <View style={styles.exampleText}>
-                    <Text style={styles.exampleTitle}>Face Forward</Text>
-                    <Text style={styles.exampleDesc}>
-                      Look directly at the camera with your face centered
-                    </Text>
-                  </View>
-                </View>
-
-                <View style={styles.exampleItem}>
-                  <View style={styles.exampleIcon}>
-                    <Ionicons name="sunny" size={14} color="#FF8C42" />
-                  </View>
-                  <View style={styles.exampleText}>
-                    <Text style={styles.exampleTitle}>Good Lighting</Text>
-                    <Text style={styles.exampleDesc}>
-                      Use natural light or bright indoor lighting
-                    </Text>
-                  </View>
-                </View>
-
-                <View style={styles.exampleItem}>
-                  <View style={styles.exampleIcon}>
-                    <MaterialIcons name="crop-free" size={14} color="#FF8C42" />
-                  </View>
-                  <View style={styles.exampleText}>
-                    <Text style={styles.exampleTitle}>Clear Background</Text>
-                    <Text style={styles.exampleDesc}>
-                      Simple backgrounds work best for accurate results
-                    </Text>
-                  </View>
-                </View>
-              </View>
-            </View>
 
             {/* Continue Button */}
             <TouchableOpacity
@@ -264,32 +215,6 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingBottom: 30,
-  },
-  floatingOrb: {
-    position: 'absolute',
-    borderRadius: 500,
-    opacity: 0.1,
-  },
-  orb1: {
-    width: 80,
-    height: 80,
-    backgroundColor: '#ff6b35',
-    top: '10%',
-    left: '10%',
-  },
-  orb2: {
-    width: 120,
-    height: 120,
-    backgroundColor: '#f7931e',
-    top: '60%',
-    right: '15%',
-  },
-  orb3: {
-    width: 60,
-    height: 60,
-    backgroundColor: '#ff6b35',
-    bottom: '20%',
-    left: '20%',
   },
   header: {
     flexDirection: 'row',
@@ -428,51 +353,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: 'rgba(255, 255, 255, 0.7)',
     textAlign: 'center',
-  },
-  examplesSection: {
-    marginBottom: 30,
-  },
-  examplesTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: 'white',
-    marginBottom: 15,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  examplesList: {
-    gap: 12,
-  },
-  exampleItem: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 12,
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
-    borderRadius: 12,
-    padding: 15,
-    marginBottom: 10,
-  },
-  exampleIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: 'rgba(255, 140, 66, 0.2)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  exampleText: {
-    flex: 1,
-  },
-  exampleTitle: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: 'white',
-    marginBottom: 4,
-  },
-  exampleDesc: {
-    fontSize: 12,
-    color: 'rgba(255, 255, 255, 0.6)',
-    lineHeight: 16,
   },
   continueButton: {
     marginTop: 10,
