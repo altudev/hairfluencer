@@ -8,6 +8,7 @@ Hairfluencer is a Bun-driven Turborepo with three main applications:
 - `apps/mobile`: Expo Router client (PRIMARY) - User-facing mobile app for AI hairstyle try-ons (`app/` screens with Expo Router navigation, `components/` shared UI, `assets/` media, `hooks/` custom React hooks, `constants/` app configuration)
 - `apps/api`: Bun + Hono + Better Auth service - Backend API handling auth, photo uploads, AI orchestration (`src/` routes, `src/db` database, `src/db/migrations`)
 - `apps/web`: Next.js 15 admin panel - Gallery management and analytics dashboard (`app/` routes, `public/` assets)
+- Shared API services live in `apps/api/src/services` — e.g. `hairstyle-generation.ts` wraps all fal.ai queue interactions so routes stay thin.
 
 Shared configurations live in `packages/eslint-config` and `packages/typescript-config`. Place reusable modules in `packages/` rather than duplicating inside apps.
 
@@ -47,13 +48,20 @@ Develop with Node 18+ and Bun 1.2.x. Each app requires specific environment vari
 - `FAL_API_KEY` - FAL.ai authentication key for AI transformations
 - `FAL_MODEL_ID` - Set to "nano-banana/edit" for hairstyle editing
 - `FRONTEND_URL` - Mobile app URL for CORS
+- `FAL_ALLOWED_IMAGE_HOSTS` (optional) - Comma-separated host whitelist enforced during image URL validation
+- `REDIS_URL` (optional) - Full Redis connection string; defaults to `redis://127.0.0.1:6378`
+- `REDIS_HOST` / `REDIS_PORT` (optional) - Override Redis host/port when not using `REDIS_URL` (port defaults to `6378`)
+- `FAL_RETRY_MAX_ATTEMPTS`, `FAL_RETRY_BASE_DELAY_MS`, `FAL_RETRY_MAX_DELAY_MS`, `FAL_CIRCUIT_FAILURE_THRESHOLD`, `FAL_CIRCUIT_OPEN_MS` (optional) - Tune retry/backoff + circuit breaker behaviour
 
 ### Mobile Environment (`apps/mobile/.env`):
 - `EXPO_PUBLIC_API_URL` - Backend API URL
 - `EXPO_PUBLIC_GOOGLE_CLIENT_ID` - Google OAuth client ID for mobile
 - `EXPO_PUBLIC_ADAPTY_PUBLIC_KEY` - Adapty SDK public key for payments
 
-Never commit secrets; update `.env.example` instead. For deployment, use secure environment variable management.
+- Never commit secrets; update `.env.example` instead. For deployment, use secure environment variable management.
+- If `FAL_API_KEY` is missing, fal.ai-powered endpoints now return a 503 rather than crashing the API process.
+- Try-on routes enforce 32KB body size limit, cap image URLs at 10, rate-limit clients (20/min) and allow at most five active queue jobs per client.
+- Redis-backed caching (6378 by default) stores queue status for 5s and completed results for 24h; fal.ai calls use exponential backoff with a circuit breaker.
 
 ## PRD Success Metrics (Hackathon Goals)
 - **User Metrics**: 200+ sign-ups, 100+ completed try-ons in week 1

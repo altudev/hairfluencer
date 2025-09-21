@@ -22,6 +22,7 @@
     "packages/*"
   ],
   "dependencies": {
-    "hono": "^4.9.8"
+    "hono": "^4.9.8",
+    "ioredis": "^5.7.0"
   }
 }
