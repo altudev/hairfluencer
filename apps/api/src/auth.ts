@@ -80,3 +80,10 @@ export const AUTH_TRUSTED_ORIGINS = trustedOrigins;
 export const authHandler = auth.handler;
 export const authApi = auth.api;
 export const authInfer = auth.$Infer;
+
+export type AuthSession = typeof auth.$Infer.Session.session;
+export type AuthUser = typeof auth.$Infer.Session.user;
+export type AuthContextVariables = {
+  user: AuthUser | null;
+  session: AuthSession | null;
+};

@@ -23,8 +23,8 @@
 ### 3. API Routing & Middleware Integration
 - [x] Mount Better Auth handler inside main Hono app (`app.on(["POST","GET"], "/api/auth/*", ...)`) before other auth-sensitive routes. *(Mounted once in `apps/api/src/index.ts` with shared CORS middleware.)*
 - [x] Register `cors` middleware ahead of the handler using `FRONTEND_URL` (mobile web) and dev Expo URLs; set `credentials: true` and allowed headers. *(`apps/api/src/index.ts` derives HTTP origins from `AUTH_TRUSTED_ORIGINS`.)*
-- [ ] Add session enrichment middleware storing `user`/`session` on `Context` for downstream routes (e.g., hairstyle gallery, favorites).
-- [ ] Update existing protected routes to read `c.get("user")` and enforce auth where PRD requires gated access.
+- [x] Add session enrichment middleware storing `user`/`session` on `Context` for downstream routes (e.g., hairstyle gallery, favorites). *(`apps/api/src/index.ts` now hydrates `c.get('user')`/`c.get('session')` through `authApi.getSession`.)*
+- [x] Update existing protected routes to read `c.get("user")` and enforce auth where PRD requires gated access. *(Favorites and try-on routes return 401 when no authenticated user is present.)*
 
 ### 4. Database Schema & Migrations
 - [ ] Use `@better-auth/cli generate` to scaffold Drizzle tables, then copy models into `apps/api/src/db/schema`.
@@ -35,8 +35,8 @@
 - [x] Create `apps/mobile/lib/auth-client.ts` using `createAuthClient` with `expoClient`, `SecureStore`, and `EXPO_PUBLIC_API_URL`.
 - [x] Ensure `app.json` (or `app.config.ts`) declares deep link scheme (e.g., `hairfluencer`) consistent with server `trustedOrigins`.
 - [ ] Configure `metro.config.js` (`unstable_enablePackageExports`) and adjust `babel.config.js` aliases only if Metro config fails.
-- [ ] Implement shared auth hooks/provider exposing `authClient.useSession()` to screens and guard navigation flows.
-- [ ] Update sign-in/up UI to call `authClient.signIn.email`, `authClient.signUp.email`, and social helpers; handle error messaging per PRD UX guidelines.
+- [x] Implement shared auth hooks/provider exposing `authClient.useSession()` to screens and guard navigation flows. *(`apps/mobile/hooks/useAuth.ts` powers gated upload flow and header state.)*
+- [ ] Update sign-in/up UI to call `authClient.signIn.email`, `authClient.signUp.email`, and social helpers; handle error messaging per PRD UX guidelines. *(`app/sign-in.tsx` now uses Better Auth; dedicated sign-up screen remains TODO.)*
 - [x] Extend environment validation to cover `EXPO_PUBLIC_*` auth keys and deep link settings so mobile builds surface misconfiguration early.
 
 ### 6. Cross-App Coordination & QA

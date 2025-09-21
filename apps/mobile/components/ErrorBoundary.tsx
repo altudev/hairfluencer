@@ -76,7 +76,7 @@ class ErrorBoundary extends Component<Props, State> {
 
               <Text style={styles.title}>Oops! Something went wrong</Text>
               <Text style={styles.subtitle}>
-                We encountered an unexpected error. Don't worry, your data is safe.
+                We encountered an unexpected error. Don&apos;t worry, your data is safe.
               </Text>
 
               <TouchableOpacity
