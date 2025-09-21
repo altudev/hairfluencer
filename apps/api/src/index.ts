@@ -10,18 +10,25 @@ const defaultFrontendOrigin = process.env.FRONTEND_URL ?? 'http://localhost:3000
 const httpOrigins = AUTH_TRUSTED_ORIGINS.filter((origin) => origin.startsWith('http'));
 const corsOrigins = httpOrigins.length > 0 ? httpOrigins : [defaultFrontendOrigin];
 
-const authCors = cors({
+// Apply CORS globally to all routes with consistent configuration
+app.use('*', cors({
   origin: corsOrigins,
-  allowMethods: ['GET', 'POST', 'OPTIONS'],
+  allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowHeaders: ['Content-Type', 'Authorization', 'Cookie'],
   exposeHeaders: ['Set-Cookie'],
   credentials: true,
   maxAge: 60 * 60,
-});
+}));
 
-app.use('/api/auth/*', authCors);
-
+// Session middleware - skip auth routes to avoid unnecessary lookups
 app.use('*', async (c, next) => {
+  // Skip session lookup for auth routes (they handle their own sessions)
+  if (c.req.path.startsWith('/api/auth/')) {
+    c.set('user', null);
+    c.set('session', null);
+    return next();
+  }
+
   try {
     const session = await authApi.getSession({ headers: c.req.raw.headers });
 
