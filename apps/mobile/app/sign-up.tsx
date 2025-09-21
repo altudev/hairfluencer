@@ -15,11 +15,14 @@ import { useRouter } from 'expo-router';
 import { useAuth } from '@/hooks/useAuth';
 import { showErrorAlert, showSuccessAlert } from '@/utils/errorHandler';
 
-export default function SignInScreen() {
+export default function SignUpScreen() {
   const router = useRouter();
-  const { signIn, isAuthenticated, isLoading } = useAuth();
+  const { signUp, isAuthenticated, isLoading } = useAuth();
+
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -29,28 +32,34 @@ export default function SignInScreen() {
   }, [isAuthenticated, router]);
 
   const handleSubmit = async () => {
-    if (!email || !password) {
-      showErrorAlert(new Error('Please enter your email and password'));
+    if (!name || !email || !password || !confirmPassword) {
+      showErrorAlert(new Error('Please complete all fields to create your account.'));
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      showErrorAlert(new Error('Passwords do not match. Please re-enter them.'));
       return;
     }
 
     setIsSubmitting(true);
 
     try {
-      await signIn.email({
+      await signUp.email({
         email,
         password,
+        name,
       });
-      showSuccessAlert('Welcome back to Hairfluencer!');
+      showSuccessAlert('Account created! You are now signed in.');
       router.replace('/');
     } catch (error) {
-      showErrorAlert(error, 'Unable to sign in');
+      showErrorAlert(error, 'Unable to sign up');
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const disableSubmit = isSubmitting || !email || !password;
+  const disableSubmit = isSubmitting || !name || !email || !password || !confirmPassword;
 
   return (
     <KeyboardAvoidingView
@@ -65,18 +74,32 @@ export default function SignInScreen() {
           <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
             <Ionicons name="arrow-back" size={22} color="white" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Welcome Back</Text>
+          <Text style={styles.headerTitle}>Create Account</Text>
           <View style={styles.headerSpacer} />
         </View>
 
         <View style={styles.content}>
           <View style={styles.badge}>
             <Ionicons name="sparkles" size={18} color="#FF8C42" />
-            <Text style={styles.badgeText}>90% of creators sign in to save their looks</Text>
+            <Text style={styles.badgeText}>Unlock premium try-ons and save your favorites</Text>
           </View>
 
-          <Text style={styles.title}>Sign in to Hairfluencer</Text>
-          <Text style={styles.subtitle}>Save favorites, sync try-ons, and get personalized picks.</Text>
+          <Text style={styles.title}>Join Hairfluencer</Text>
+          <Text style={styles.subtitle}>Sign up in seconds to start exploring your next hairstyle.</Text>
+
+          <View style={styles.formGroup}>
+            <Text style={styles.inputLabel}>Name</Text>
+            <View style={styles.inputWrapper}>
+              <Ionicons name="person" size={18} color="rgba(255, 255, 255, 0.6)" />
+              <TextInput
+                style={styles.input}
+                placeholder="Your name"
+                placeholderTextColor="rgba(255, 255, 255, 0.5)"
+                value={name}
+                onChangeText={setName}
+              />
+            </View>
+          </View>
 
           <View style={styles.formGroup}>
             <Text style={styles.inputLabel}>Email</Text>
@@ -84,7 +107,7 @@ export default function SignInScreen() {
               <Ionicons name="mail" size={18} color="rgba(255, 255, 255, 0.6)" />
               <TextInput
                 style={styles.input}
-                placeholder="your@email.com"
+                placeholder="you@example.com"
                 placeholderTextColor="rgba(255, 255, 255, 0.5)"
                 keyboardType="email-address"
                 autoCapitalize="none"
@@ -101,11 +124,26 @@ export default function SignInScreen() {
               <Ionicons name="lock-closed" size={18} color="rgba(255, 255, 255, 0.6)" />
               <TextInput
                 style={styles.input}
-                placeholder="••••••••"
+                placeholder="Create a password"
                 placeholderTextColor="rgba(255, 255, 255, 0.5)"
                 secureTextEntry
                 value={password}
                 onChangeText={setPassword}
+              />
+            </View>
+          </View>
+
+          <View style={styles.formGroup}>
+            <Text style={styles.inputLabel}>Confirm Password</Text>
+            <View style={styles.inputWrapper}>
+              <Ionicons name="lock-closed" size={18} color="rgba(255, 255, 255, 0.6)" />
+              <TextInput
+                style={styles.input}
+                placeholder="Repeat password"
+                placeholderTextColor="rgba(255, 255, 255, 0.5)"
+                secureTextEntry
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
               />
             </View>
           </View>
@@ -124,8 +162,8 @@ export default function SignInScreen() {
                 <ActivityIndicator color="white" />
               ) : (
                 <>
-                  <Ionicons name="log-in" size={18} color="white" />
-                  <Text style={styles.submitButtonText}>Sign In</Text>
+                  <Ionicons name="sparkles" size={18} color="white" />
+                  <Text style={styles.submitButtonText}>Create Account</Text>
                 </>
               )}
             </LinearGradient>
@@ -133,10 +171,11 @@ export default function SignInScreen() {
 
           <TouchableOpacity
             style={styles.secondaryAction}
-            onPress={() => router.push('/sign-up')}
+            onPress={() => router.replace('/sign-in')}
           >
             <Text style={styles.secondaryActionText}>
-              New here? <Text style={styles.secondaryActionHighlight}>Create an account</Text>
+              Already have an account?{' '}
+              <Text style={styles.secondaryActionHighlight}>Sign in</Text>
             </Text>
           </TouchableOpacity>
         </View>
@@ -144,7 +183,7 @@ export default function SignInScreen() {
         {isLoading && (
           <View style={styles.sessionSyncBanner}>
             <ActivityIndicator color="white" size="small" />
-            <Text style={styles.sessionSyncText}>Restoring your session…</Text>
+            <Text style={styles.sessionSyncText}>Checking your session…</Text>
           </View>
         )}
       </LinearGradient>

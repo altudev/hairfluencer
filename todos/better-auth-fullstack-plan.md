@@ -36,7 +36,7 @@
 - [x] Ensure `app.json` (or `app.config.ts`) declares deep link scheme (e.g., `hairfluencer`) consistent with server `trustedOrigins`.
 - [ ] Configure `metro.config.js` (`unstable_enablePackageExports`) and adjust `babel.config.js` aliases only if Metro config fails.
 - [x] Implement shared auth hooks/provider exposing `authClient.useSession()` to screens and guard navigation flows. *(`apps/mobile/hooks/useAuth.ts` powers gated upload flow and header state.)*
-- [ ] Update sign-in/up UI to call `authClient.signIn.email`, `authClient.signUp.email`, and social helpers; handle error messaging per PRD UX guidelines. *(`app/sign-in.tsx` now uses Better Auth; dedicated sign-up screen remains TODO.)*
+- [x] Update sign-in/up UI to call `authClient.signIn.email`, `authClient.signUp.email`, and social helpers; handle error messaging per PRD UX guidelines. *(`apps/mobile/app/sign-in.tsx` + `apps/mobile/app/sign-up.tsx` now use Better Auth email flows and shared error handling.)*
 - [x] Extend environment validation to cover `EXPO_PUBLIC_*` auth keys and deep link settings so mobile builds surface misconfiguration early.
 
 ### 6. Cross-App Coordination & QA
