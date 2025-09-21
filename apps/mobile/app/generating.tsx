@@ -13,6 +13,7 @@ import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import Constants from 'expo-constants';
 import Svg, { Circle } from 'react-native-svg';
+import useApi from '@/stores/useApi';
 
 const { width } = Dimensions.get('window');
 
@@ -26,6 +27,8 @@ interface StatusStep {
 export default function GeneratingScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
+  const { generateHairstyle } = useApi();
+
   const { styleId, styleName, imageUri } = params as {
     styleId: string;
     styleName: string;
@@ -109,22 +112,19 @@ export default function GeneratingScreen() {
   };
 
   const mockApiCall = async () => {
-    // Mock API request for hairstyle generation
-    console.log('Generating hairstyle with:', {
-      styleId,
-      styleName,
-      imageUri,
-    });
+    // Use the API hook to generate hairstyle
+    const result = await generateHairstyle(imageUri, styleId, styleName);
 
-    // Simulate API response delay
-    setTimeout(() => {
-      // Navigate to results screen (to be implemented)
-      // For now, just show an alert
+    if (result.success) {
+      // Navigate to home screen with success message
       router.push({
         pathname: '/(tabs)',
-        params: { success: 'true' }
+        params: { success: 'true', transformationId: result.data?.id }
       });
-    }, 1000);
+    } else {
+      // Handle error - navigate back with error message
+      router.back();
+    }
   };
 
   const spin = rotateAnim.interpolate({

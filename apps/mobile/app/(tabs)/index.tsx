@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useRef, useEffect } from 'react';
 import {
   StyleSheet,
   Text,
@@ -18,6 +18,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons, MaterialIcons, FontAwesome } from '@expo/vector-icons';
 import Constants from 'expo-constants';
 import { useRouter } from 'expo-router';
+import useStore from '@/stores/useStore';
 
 const { width } = Dimensions.get('window');
 
@@ -101,10 +102,18 @@ const categories = ['All Styles', 'Short Hair', 'Long Hair', 'Curly', 'Braids', 
 
 export default function HomeScreen() {
   const router = useRouter();
-  const [selectedCategory, setSelectedCategory] = useState('All Styles');
-  const [searchText, setSearchText] = useState('');
-  const [favorites, setFavorites] = useState<Set<string>>(new Set(['7', '10']));
   const pulseAnim = useRef(new Animated.Value(1)).current;
+
+  // Zustand store
+  const {
+    selectedCategory,
+    setSelectedCategory,
+    searchQuery,
+    setSearchQuery,
+    favorites,
+    toggleFavorite,
+    setSelectedHairstyle,
+  } = useStore();
 
   useEffect(() => {
     const pulse = Animated.loop(
@@ -125,17 +134,6 @@ export default function HomeScreen() {
     return () => pulse.stop();
   }, [pulseAnim]);
 
-  const toggleFavorite = (id: string) => {
-    setFavorites(prev => {
-      const newFavorites = new Set(prev);
-      if (newFavorites.has(id)) {
-        newFavorites.delete(id);
-      } else {
-        newFavorites.add(id);
-      }
-      return newFavorites;
-    });
-  };
 
   const renderStars = (rating: number) => {
     const stars = [];
@@ -155,6 +153,14 @@ export default function HomeScreen() {
   };
 
   const handleStylePress = (styleId: string, styleName: string) => {
+    // Set selected hairstyle in store
+    const selectedStyle = [...trendingStyles, ...galleryStyles].find(
+      style => style.id === styleId
+    );
+    if (selectedStyle) {
+      setSelectedHairstyle(selectedStyle);
+    }
+
     router.push({
       pathname: '/upload',
       params: { styleId, styleName }
@@ -266,8 +272,8 @@ export default function HomeScreen() {
                 style={styles.searchInput}
                 placeholder="Search hairstyles..."
                 placeholderTextColor="#999"
-                value={searchText}
-                onChangeText={setSearchText}
+                value={searchQuery}
+                onChangeText={setSearchQuery}
               />
               <TouchableOpacity style={styles.micButton}>
                 <Ionicons name="mic" size={16} color="white" />
