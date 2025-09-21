@@ -12,6 +12,8 @@ import { FalClientConfigError } from '../../services/fal-client';
 
 const allowedOutputFormats = new Set(['jpeg', 'png']);
 const allowedPriorities = new Set(['low', 'normal']);
+const MAX_IMAGE_URLS = 10;
+const MAX_URL_LENGTH = 2048;
 
 class TryOnValidationError extends Error {
   constructor(public readonly field: string, message: string) {
@@ -90,6 +92,15 @@ export const createTryOnRoutes = () => {
   return app;
 };
 
+const isValidUrl = (url: string): boolean => {
+  try {
+    const parsed = new URL(url);
+    return ['http:', 'https:'].includes(parsed.protocol);
+  } catch {
+    return false;
+  }
+};
+
 const parseSubmitPayload = (payload: unknown): HairstyleGenerationRequest => {
   if (typeof payload !== 'object' || payload === null) {
     throw new TryOnValidationError('payload', 'Request body must be a JSON object');
@@ -114,15 +125,33 @@ const parseSubmitPayload = (payload: unknown): HairstyleGenerationRequest => {
     throw new TryOnValidationError('imageUrls', 'imageUrls must include at least one image URL');
   }
 
+  if (imageUrls.length > MAX_IMAGE_URLS) {
+    throw new TryOnValidationError('imageUrls', `Maximum ${MAX_IMAGE_URLS} image URLs allowed`);
+  }
+
   const sanitizedImageUrls = imageUrls
     .map((value) => {
       if (typeof value !== 'string') {
         throw new TryOnValidationError('imageUrls', 'imageUrls must be strings');
       }
 
-      return value.trim();
+      const trimmedUrl = value.trim();
+
+      if (trimmedUrl.length === 0) {
+        return null;
+      }
+
+      if (trimmedUrl.length > MAX_URL_LENGTH) {
+        throw new TryOnValidationError('imageUrls', `URL exceeds maximum length of ${MAX_URL_LENGTH} characters`);
+      }
+
+      if (!isValidUrl(trimmedUrl)) {
+        throw new TryOnValidationError('imageUrls', `Invalid URL format: ${trimmedUrl}`);
+      }
+
+      return trimmedUrl;
     })
-    .filter((value) => value.length > 0);
+    .filter((value): value is string => value !== null);
 
   if (sanitizedImageUrls.length === 0) {
     throw new TryOnValidationError('imageUrls', 'imageUrls cannot be empty');
@@ -154,8 +183,15 @@ const parseSubmitPayload = (payload: unknown): HairstyleGenerationRequest => {
     }
   }
 
-  if (webhookUrl !== undefined && typeof webhookUrl !== 'string') {
-    throw new TryOnValidationError('webhookUrl', 'webhookUrl must be a string');
+  if (webhookUrl !== undefined) {
+    if (typeof webhookUrl !== 'string') {
+      throw new TryOnValidationError('webhookUrl', 'webhookUrl must be a string');
+    }
+
+    const trimmedWebhookUrl = webhookUrl.trim();
+    if (trimmedWebhookUrl && !isValidUrl(trimmedWebhookUrl)) {
+      throw new TryOnValidationError('webhookUrl', 'webhookUrl must be a valid URL');
+    }
   }
 
   if (hint !== undefined && typeof hint !== 'string') {
@@ -235,7 +271,7 @@ const handleError = (error: unknown, c: Context) => {
         error: errorCode,
         message,
       },
-      status,
+      status as any,
     );
   }
 
