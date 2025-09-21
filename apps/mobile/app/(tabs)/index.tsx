@@ -12,9 +12,11 @@ import {
   Animated,
   StatusBar,
   SafeAreaView,
+  Platform,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons, MaterialIcons, FontAwesome } from '@expo/vector-icons';
+import Constants from 'expo-constants';
 
 const { width } = Dimensions.get('window');
 
@@ -344,13 +346,14 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    paddingTop: Platform.OS === 'android' ? Constants.statusBarHeight : 0,
   },
   backgroundGradient: {
     flex: 1,
   },
   header: {
     paddingHorizontal: 16,
-    paddingTop: 10,
+    paddingTop: Platform.OS === 'android' ? 20 : 10,
     paddingBottom: 20,
     borderBottomLeftRadius: 24,
     borderBottomRightRadius: 24,
