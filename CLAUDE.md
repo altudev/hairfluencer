@@ -40,6 +40,7 @@ bun dev              # Start Hono server with hot reload (port 3000)
 ### Mobile app (apps/mobile):
 ```bash
 cd apps/mobile
+bunx expo install [package]  # Install packages with Expo compatibility layer
 bun start            # Start Expo development server
 bun android          # Run on Android emulator/device
 bun ios              # Run on iOS simulator/device

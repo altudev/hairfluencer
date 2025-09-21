@@ -1,273 +1,303 @@
-import React, { useState } from 'react';
+// React imports
+import React, { useEffect, useRef, useState } from 'react';
+
+// React Native imports
 import {
+  Animated,
+  Dimensions,
+  FlatList,
+  Platform,
+  SafeAreaView,
   ScrollView,
+  StatusBar,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   View,
-  Image,
-  FlatList,
-  Dimensions,
-  SafeAreaView,
 } from 'react-native';
+
+// Expo imports
+import { FontAwesome, Ionicons, MaterialIcons } from '@expo/vector-icons';
+import Constants from 'expo-constants';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
-import { StatusBar } from 'expo-status-bar';
-import { HairstyleCard } from '@/components/hairstyle-card';
 import { useRouter } from 'expo-router';
+
+// Internal imports
+import { avatarImage, hairstyles as localHairstyles } from '@/assets/images/hairstyleData';
+import HairstyleCard, { HairstyleData } from '@/components/HairstyleCard';
+import { HomeScreenSkeleton } from '@/components/LoadingSkeletons';
+import OptimizedImage from '@/components/OptimizedImage';
+import { ANIMATION, CATEGORIES, COLORS } from '@/constants';
+import useStore from '@/stores/useStore';
 
 const { width } = Dimensions.get('window');
 
-// Sample data for hairstyles
-const trendingStyles = [
-  {
-    id: '1',
-    name: 'Pixie Perfection',
-    rating: 4.8,
-    image: 'https://storage.googleapis.com/uxpilot-auth.appspot.com/be64cd2931-947e9871d4c77c2507b6.png',
-    isFavorite: false,
-  },
-  {
-    id: '2',
-    name: 'Beach Waves',
-    rating: 4.6,
-    image: 'https://storage.googleapis.com/uxpilot-auth.appspot.com/2beb6a10f5-a3d954e519944b9a2e0e.png',
-    isFavorite: false,
-  },
-];
+// Using HairstyleData from HairstyleCard component
+type HairstyleItem = HairstyleData;
 
-const galleryStyles = [
-  {
-    id: '3',
-    name: 'Classic Bob',
-    rating: 4.9,
-    image: 'https://storage.googleapis.com/uxpilot-auth.appspot.com/caf64ff634-85b3d6d14184ab5b5420.png',
-    isFavorite: false,
-  },
-  {
-    id: '4',
-    name: 'Messy Bun',
-    rating: 4.7,
-    image: 'https://storage.googleapis.com/uxpilot-auth.appspot.com/f19fbec6a2-a8286716688b1efc3e0d.png',
-    isFavorite: false,
-  },
-  {
-    id: '5',
-    name: 'French Braid',
-    rating: 4.8,
-    image: 'https://storage.googleapis.com/uxpilot-auth.appspot.com/fdc4d1163d-f845c06cbf8e6d217cdc.png',
-    isFavorite: false,
-  },
-  {
-    id: '6',
-    name: 'Layered Cut',
-    rating: 4.5,
-    image: 'https://storage.googleapis.com/uxpilot-auth.appspot.com/34dec0899e-0ae9c003e72f0c865ff8.png',
-    isFavorite: false,
-  },
-  {
-    id: '7',
-    name: 'Natural Afro',
-    rating: 4.9,
-    image: 'https://storage.googleapis.com/uxpilot-auth.appspot.com/721e0d9859-38395ace31b83273673e.png',
-    isFavorite: true,
-  },
-  {
-    id: '8',
-    name: 'High Ponytail',
-    rating: 4.6,
-    image: 'https://storage.googleapis.com/uxpilot-auth.appspot.com/7b3ed9f120-e8f99aadc54ffacd9a94.png',
-    isFavorite: false,
-  },
-  {
-    id: '9',
-    name: 'Modern Shag',
-    rating: 4.8,
-    image: 'https://storage.googleapis.com/uxpilot-auth.appspot.com/95fc1f0ab0-83aa427db37050c868f3.png',
-    isFavorite: false,
-  },
-  {
-    id: '10',
-    name: 'Top Knot',
-    rating: 4.4,
-    image: 'https://storage.googleapis.com/uxpilot-auth.appspot.com/6a01180e69-6cf9671b72cb85de0a7b.png',
-    isFavorite: true,
-  },
-];
+// Map local hairstyles to the format used by the component
+const trendingStyles: HairstyleItem[] = localHairstyles
+  .filter(h => h.trending)
+  .map(h => ({
+    id: h.id,
+    title: h.name,
+    image: h.image,
+    rating: h.rating,
+    price: h.price,
+    category: h.category,
+  }));
 
-const categories = ['All Styles', 'Short Hair', 'Long Hair', 'Curly', 'Braids', 'Updos'];
+const galleryStyles: HairstyleItem[] = localHairstyles
+  .filter(h => !h.trending)
+  .map(h => ({
+    id: h.id,
+    title: h.name,
+    image: h.image,
+    rating: h.rating,
+    category: h.category,
+  }));
+
+const categories = CATEGORIES.slice(0, 6); // Use first 6 categories from constants
 
 export default function HomeScreen() {
   const router = useRouter();
-  const [selectedCategory, setSelectedCategory] = useState('All Styles');
-  const [searchText, setSearchText] = useState('');
-  const [favorites, setFavorites] = useState<string[]>(['7', '10']);
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+  const [isLoading, setIsLoading] = useState(true);
 
-  const toggleFavorite = (id: string) => {
-    setFavorites(prev =>
-      prev.includes(id) ? prev.filter(fId => fId !== id) : [...prev, id]
+  // Zustand store
+  const {
+    selectedCategory,
+    setSelectedCategory,
+    searchQuery,
+    setSearchQuery,
+    favorites,
+    toggleFavorite,
+    setSelectedHairstyle,
+  } = useStore();
+
+  useEffect(() => {
+    const pulse = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, {
+          toValue: 1.1,
+          duration: ANIMATION.PULSE_DURATION,
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulseAnim, {
+          toValue: 1,
+          duration: ANIMATION.PULSE_DURATION,
+          useNativeDriver: true,
+        }),
+      ])
     );
+    pulse.start();
+    return () => pulse.stop();
+  }, [pulseAnim]);
+
+  useEffect(() => {
+    // Simulate data loading
+    const loadData = async () => {
+      // In real app, this would be an API call
+      setTimeout(() => {
+        setIsLoading(false);
+      }, 1500);
+    };
+
+    loadData();
+  }, []);
+
+
+
+  const handleStylePress = (styleId: string, styleName: string) => {
+    // Set selected hairstyle in store
+    const selectedStyle = [...trendingStyles, ...galleryStyles].find(
+      style => style.id === styleId
+    );
+    if (selectedStyle) {
+      setSelectedHairstyle(selectedStyle);
+    }
+
+    router.push({
+      pathname: '/upload',
+      params: { styleId, styleName }
+    });
   };
 
-  const handleCameraPress = () => {
-    // Navigate to camera/upload screen
-    console.log('Camera button pressed');
-    // router.push('/camera');
-  };
-
-  const handleStylePress = (styleId: string) => {
-    console.log('Style selected:', styleId);
-    // router.push(`/style/${styleId}`);
-  };
-
-  const renderTrendingItem = ({ item }: { item: typeof trendingStyles[0] }) => (
+  const renderTrendingCard = ({ item }: { item: HairstyleItem }) => (
     <HairstyleCard
-      {...item}
-      isFavorite={favorites.includes(item.id)}
+      item={item}
       variant="trending"
-      onPress={() => handleStylePress(item.id)}
-      onToggleFavorite={toggleFavorite}
+      isFavorite={favorites.has(item.id)}
+      onPress={handleStylePress}
+      onFavoritePress={toggleFavorite}
     />
   );
 
-  const renderGalleryItem = ({ item, index }: { item: typeof galleryStyles[0], index: number }) => (
+  const renderGalleryCard = ({ item, index }: { item: HairstyleItem; index: number }) => (
     <HairstyleCard
-      {...item}
-      isFavorite={favorites.includes(item.id)}
+      item={item}
       variant="gallery"
       index={index}
-      onPress={() => handleStylePress(item.id)}
-      onToggleFavorite={toggleFavorite}
+      isFavorite={favorites.has(item.id)}
+      onPress={handleStylePress}
+      onFavoritePress={toggleFavorite}
     />
   );
+
+  if (isLoading) {
+    return <HomeScreenSkeleton />;
+  }
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar style="dark" />
+      <StatusBar barStyle="dark-content" />
       <LinearGradient
         colors={['#FFE4E1', '#FFFFFF', '#E6F3FF']}
         style={styles.backgroundGradient}
-      />
-
-      <ScrollView showsVerticalScrollIndicator={false} stickyHeaderIndices={[0]}>
-        {/* Header */}
-        <LinearGradient
-          colors={['#FFF0F5', '#FFF5E6', '#F0F8FF']}
-          style={styles.header}
-        >
-          <View style={styles.headerTop}>
-            <View style={styles.headerLeft}>
-              <LinearGradient
-                colors={['#FF8C42', '#FFB366']}
-                style={styles.logoContainer}
-              >
-                <Ionicons name="cut" size={20} color="#FFF" />
-              </LinearGradient>
-              <Text style={styles.appName}>Hairfluencer</Text>
+      >
+        <ScrollView showsVerticalScrollIndicator={false} bounces={false}>
+          {/* Header */}
+          <LinearGradient
+            colors={['#FFF0F5', '#FFF5EE', '#F0F8FF']}
+            style={styles.header}
+          >
+            <View style={styles.headerTop}>
+              <View style={styles.logoContainer}>
+                <LinearGradient
+                  colors={['#FF8C42', '#FFB366']}
+                  style={styles.logoIcon}
+                >
+                  <MaterialIcons name="content-cut" size={20} color="white" />
+                </LinearGradient>
+                <Text style={styles.appTitle}>Hairfluencer</Text>
+              </View>
+              <View style={styles.headerActions}>
+                <TouchableOpacity
+                  style={styles.notificationButton}
+                  onPress={() => router.push('/privacy-settings')}
+                >
+                  <Ionicons name="shield-checkmark-outline" size={22} color="#666" />
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.notificationButton}>
+                  <Ionicons name="notifications-outline" size={22} color="#666" />
+                </TouchableOpacity>
+                <OptimizedImage
+                  source={avatarImage}
+                  style={styles.avatar}
+                  priority="low"
+                />
+              </View>
             </View>
-            <View style={styles.headerRight}>
-              <TouchableOpacity style={styles.iconButton}>
-                <Ionicons name="notifications-outline" size={24} color="#666" />
-              </TouchableOpacity>
-              <Image
-                source={{ uri: 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-5.jpg' }}
-                style={styles.profileImage}
+
+            {/* Search Bar */}
+            <View style={styles.searchContainer}>
+              <Ionicons name="search" size={20} color="#999" style={styles.searchIcon} />
+              <TextInput
+                style={styles.searchInput}
+                placeholder="Search hairstyles..."
+                placeholderTextColor="#999"
+                value={searchQuery}
+                onChangeText={setSearchQuery}
               />
+              <TouchableOpacity style={styles.micButton}>
+                <Ionicons name="mic" size={16} color="white" />
+              </TouchableOpacity>
             </View>
-          </View>
+          </LinearGradient>
 
-          {/* Search Bar */}
-          <View style={styles.searchContainer}>
-            <Ionicons name="search" size={20} color="#999" style={styles.searchIcon} />
-            <TextInput
-              style={styles.searchInput}
-              placeholder="Search hairstyles..."
-              placeholderTextColor="#999"
-              value={searchText}
-              onChangeText={setSearchText}
-            />
-            <TouchableOpacity style={styles.micButton}>
-              <LinearGradient
-                colors={['#FF8C42', '#FFB366']}
-                style={styles.micButtonGradient}
-              >
-                <Ionicons name="mic" size={16} color="#FFF" />
-              </LinearGradient>
-            </TouchableOpacity>
-          </View>
-        </LinearGradient>
-
-        {/* Categories */}
-        <View style={styles.categoriesContainer}>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            {categories.map((category) => (
-              <TouchableOpacity
-                key={category}
-                onPress={() => setSelectedCategory(category)}
-                style={[
-                  styles.categoryPill,
-                  selectedCategory === category && styles.categoryPillActive,
-                ]}
-              >
-                <Text
+          {/* Category Pills */}
+          <View style={styles.categoriesContainer}>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.categoriesScroll}
+            >
+              {categories.map((category) => (
+                <TouchableOpacity
+                  key={category}
+                  onPress={() => setSelectedCategory(category)}
                   style={[
-                    styles.categoryText,
-                    selectedCategory === category && styles.categoryTextActive,
+                    styles.categoryPill,
+                    selectedCategory === category && styles.categoryPillActive,
                   ]}
                 >
-                  {category}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-        </View>
+                  <Text
+                    style={[
+                      styles.categoryText,
+                      selectedCategory === category && styles.categoryTextActive,
+                    ]}
+                  >
+                    {category}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
 
-        {/* Trending Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Trending Now</Text>
-          <FlatList
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            data={trendingStyles}
-            renderItem={renderTrendingItem}
-            keyExtractor={(item) => item.id}
-            contentContainerStyle={styles.trendingList}
-          />
-        </View>
+          {/* Trending Section */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Trending Now</Text>
+            <FlatList
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              data={trendingStyles}
+              renderItem={renderTrendingCard}
+              keyExtractor={(item) => item.id}
+              contentContainerStyle={styles.trendingList}
+              getItemLayout={(data, index) => ({
+                length: 280,
+                offset: 280 * index,
+                index,
+              })}
+              initialNumToRender={2}
+              maxToRenderPerBatch={3}
+              windowSize={5}
+              removeClippedSubviews={true}
+            />
+          </View>
 
-        {/* Main Gallery */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Discover Your Style</Text>
-          <FlatList
-            data={galleryStyles}
-            renderItem={renderGalleryItem}
-            keyExtractor={(item) => item.id}
-            numColumns={2}
-            columnWrapperStyle={styles.galleryRow}
-            scrollEnabled={false}
-          />
-        </View>
+          {/* Main Gallery */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Discover Your Style</Text>
+            <View style={styles.galleryGrid}>
+              {galleryStyles.map((item, index) => (
+                <View key={item.id} style={styles.galleryItemWrapper}>
+                  {renderGalleryCard({ item, index })}
+                </View>
+              ))}
+            </View>
+          </View>
 
-        {/* Footer */}
-        <LinearGradient
-          colors={['#FFF0F5', '#FFF5E6', '#F0F8FF']}
-          style={styles.footer}
+          {/* Footer */}
+          <LinearGradient
+            colors={['#FFF0F5', '#FFF5EE', '#F0F8FF']}
+            style={styles.footer}
+          >
+            <Text style={styles.footerTitle}>✨ Discover your perfect style with Hairfluencer AI ✨</Text>
+            <Text style={styles.footerSubtitle}>Your beauty journey starts here</Text>
+          </LinearGradient>
+        </ScrollView>
+
+        {/* Floating Camera Button */}
+        <Animated.View
+          style={[
+            styles.cameraButton,
+            {
+              transform: [{ scale: pulseAnim }],
+            },
+          ]}
         >
-          <Text style={styles.footerTitle}>✨ Discover your perfect style with Hairfluencer ✨</Text>
-          <Text style={styles.footerSubtitle}>Your beauty journey starts here</Text>
-        </LinearGradient>
-      </ScrollView>
-
-      {/* Floating Camera Button */}
-      <TouchableOpacity style={styles.cameraButton} activeOpacity={0.8} onPress={handleCameraPress}>
-        <LinearGradient
-          colors={['#FF8C42', '#FFB366']}
-          style={styles.cameraButtonGradient}
-        >
-          <Ionicons name="camera" size={24} color="#FFF" />
-        </LinearGradient>
-      </TouchableOpacity>
+          <TouchableOpacity activeOpacity={0.8}>
+            <LinearGradient
+              colors={['#FF8C42', '#FFB366']}
+              style={styles.cameraButtonGradient}
+            >
+              <Ionicons name="camera" size={24} color="white" />
+            </LinearGradient>
+          </TouchableOpacity>
+        </Animated.View>
+      </LinearGradient>
     </SafeAreaView>
   );
 }
@@ -275,18 +305,14 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFF',
+    paddingTop: Platform.OS === 'android' ? Constants.statusBarHeight : 0,
   },
   backgroundGradient: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    top: 0,
-    bottom: 0,
+    flex: 1,
   },
   header: {
     paddingHorizontal: 16,
-    paddingTop: 12,
+    paddingTop: Platform.OS === 'android' ? 20 : 10,
     paddingBottom: 20,
     borderBottomLeftRadius: 24,
     borderBottomRightRadius: 24,
@@ -302,38 +328,38 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 16,
   },
-  headerLeft: {
+  logoContainer: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-  logoContainer: {
+  logoIcon: {
     width: 40,
     height: 40,
     borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
+    marginRight: 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.2,
     shadowRadius: 4,
     elevation: 3,
   },
-  appName: {
+  appTitle: {
     fontSize: 24,
     fontWeight: 'bold',
     color: '#333',
-    marginLeft: 12,
   },
-  headerRight: {
+  headerActions: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
   },
-  iconButton: {
+  notificationButton: {
     width: 40,
     height: 40,
+    backgroundColor: 'white',
     borderRadius: 20,
-    backgroundColor: '#FFF',
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#000',
@@ -342,7 +368,7 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
-  profileImage: {
+  avatar: {
     width: 40,
     height: 40,
     borderRadius: 20,
@@ -354,10 +380,10 @@ const styles = StyleSheet.create({
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFF',
-    borderRadius: 24,
+    backgroundColor: 'white',
+    borderRadius: 25,
     paddingHorizontal: 16,
-    height: 48,
+    height: 50,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -365,7 +391,7 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   searchIcon: {
-    marginRight: 12,
+    marginRight: 10,
   },
   searchInput: {
     flex: 1,
@@ -373,24 +399,25 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   micButton: {
-    marginLeft: 8,
-  },
-  micButtonGradient: {
     width: 32,
     height: 32,
+    backgroundColor: '#FF8C42',
     borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
   },
   categoriesContainer: {
+    paddingVertical: 16,
+  },
+  categoriesScroll: {
     paddingHorizontal: 16,
-    paddingVertical: 20,
+    gap: 12,
   },
   categoryPill: {
     paddingHorizontal: 20,
     paddingVertical: 10,
+    backgroundColor: 'white',
     borderRadius: 20,
-    backgroundColor: '#FFF',
     marginRight: 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -407,7 +434,7 @@ const styles = StyleSheet.create({
     color: '#666',
   },
   categoryTextActive: {
-    color: '#FFF',
+    color: 'white',
   },
   section: {
     paddingHorizontal: 16,
@@ -420,16 +447,118 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   trendingList: {
-    paddingRight: 16,
+    gap: 16,
+  },
+  trendingCard: {
+    width: 280,
+    height: 140,
+    borderRadius: 16,
+    overflow: 'hidden',
+    marginRight: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  trendingImage: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
+  },
+  trendingGradient: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: '60%',
+    justifyContent: 'flex-end',
+    paddingHorizontal: 12,
+    paddingBottom: 12,
+  },
+  trendingTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: 'white',
+    marginBottom: 4,
+  },
+  trendingBottom: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  ratingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  starsContainer: {
+    flexDirection: 'row',
+    gap: 2,
+  },
+  ratingText: {
+    fontSize: 12,
+    color: 'white',
+    marginLeft: 4,
+  },
+  galleryGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
+  galleryItemWrapper: {
+    width: (width - 48) / 2,
+    marginBottom: 16,
   },
   galleryRow: {
     justifyContent: 'space-between',
+    marginBottom: 16,
+  },
+  galleryCard: {
+    width: (width - 48) / 2,
+    height: 200,
+    borderRadius: 16,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  galleryCardRight: {
+    marginLeft: 16,
+  },
+  galleryImage: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
+  },
+  galleryGradient: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: '40%',
+    justifyContent: 'flex-end',
+    paddingHorizontal: 12,
+    paddingBottom: 12,
+  },
+  galleryTitle: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: 'white',
+    marginBottom: 4,
+  },
+  galleryBottom: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   footer: {
     paddingVertical: 24,
     paddingHorizontal: 16,
     alignItems: 'center',
-    marginBottom: 80,
+    marginTop: 20,
   },
   footerTitle: {
     fontSize: 16,
@@ -447,11 +576,6 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 24,
     right: 24,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
-    elevation: 8,
   },
   cameraButtonGradient: {
     width: 56,
@@ -459,5 +583,10 @@ const styles = StyleSheet.create({
     borderRadius: 28,
     justifyContent: 'center',
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
   },
 });

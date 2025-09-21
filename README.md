@@ -1,135 +1,170 @@
-# Turborepo starter
+# Hairfluencer - AI Hairstyle Try On
 
-This Turborepo starter is maintained by the Turborepo core team.
+Hairfluencer is an AI-powered mobile application that enables users to instantly visualize new haircuts and colors using advanced AI transformation technology. Built as a hackathon MVP using Turborepo, Expo, and FAL.ai.
 
-## Using this example
+## Features
 
-Run the following command:
+- **AI Hairstyle Transformation**: Upload a selfie and try on different hairstyles using FAL.ai's nano-banana/edit model
+- **Dual Language Support**: Full support for English and Spanish interfaces
+- **Authentication**: Secure login with email/password or Google OAuth
+- **Favorites System**: Save and manage your favorite hairstyle transformations
+- **Admin Panel**: Web-based management interface for hairstyle gallery and analytics
 
-```sh
-npx create-turbo@latest
+## Project Structure
+
+This is a Turborepo monorepo containing:
+
+### Apps
+- `apps/mobile`: Expo React Native app (primary client) for iOS/Android
+- `apps/api`: Bun + Hono backend API with Better Auth and Drizzle ORM
+- `apps/web`: Next.js 15 admin panel with Turbopack
+
+### Packages
+- `packages/eslint-config`: Shared ESLint configurations
+- `packages/typescript-config`: Shared TypeScript configurations
+
+## Quick Start
+
+### Prerequisites
+- Node.js 18+
+- Bun 1.2.22+
+- PostgreSQL database
+- FAL.ai API key
+- Google OAuth credentials (optional)
+
+### Installation
+
+```bash
+# Clone the repository
+git clone https://github.com/yourusername/hairfluencer.git
+cd hairfluencer
+
+# Install dependencies
+bun install
 ```
 
-## What's inside?
+### Environment Setup
 
-This Turborepo includes the following packages/apps:
+Create `.env` files in the respective app directories:
 
-### Apps and Packages
-
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
-
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
-
-### Utilities
-
-This Turborepo has some additional tools already setup for you:
-
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
-
-### Build
-
-To build all apps and packages, run the following command:
-
-```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build
-yarn dlx turbo build
-pnpm exec turbo build
+**apps/api/.env:**
+```bash
+DATABASE_URL=postgres://user:password@localhost:5432/hairfluencer
+DRIZZLE_DATABASE_URL=postgres://user:password@localhost:5432/hairfluencer
+BETTER_AUTH_SECRET=your-32-character-minimum-secret-key
+BETTER_AUTH_URL=http://localhost:3001
+FRONTEND_URL=http://localhost:8081
+GOOGLE_CLIENT_ID=your-google-client-id
+GOOGLE_CLIENT_SECRET=your-google-client-secret
+FAL_API_KEY=your-fal-api-key
+FAL_MODEL_ID=nano-banana/edit
 ```
 
-You can build a specific package by using a [filter](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters):
-
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build --filter=docs
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build --filter=docs
-yarn exec turbo build --filter=docs
-pnpm exec turbo build --filter=docs
+**apps/mobile/.env:**
+```bash
+EXPO_PUBLIC_API_URL=http://localhost:3001
+EXPO_PUBLIC_GOOGLE_CLIENT_ID=your-google-client-id
+EXPO_PUBLIC_ADAPTY_PUBLIC_KEY=your-adapty-public-key
 ```
 
-### Develop
-
-To develop all apps and packages, run the following command:
-
-```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev
-yarn exec turbo dev
-pnpm exec turbo dev
+**apps/web/.env:**
+```bash
+NEXT_PUBLIC_API_URL=http://localhost:3001
 ```
 
-You can develop a specific package by using a [filter](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters):
+### Database Setup
 
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev --filter=web
+```bash
+# Navigate to API directory
+cd apps/api
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev --filter=web
-yarn exec turbo dev --filter=web
-pnpm exec turbo dev --filter=web
-```
+# Generate database migrations
+bun run db:generate
 
-### Remote Caching
+# Apply migrations
+bun run db:migrate
 
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
-
-Turborepo can use a technique known as [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
-
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
-
-```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo login
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo login
-yarn exec turbo login
-pnpm exec turbo login
+# (Optional) Open Drizzle Studio for database management
+bun run db:studio
 ```
 
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
+## Development
 
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
-
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo link
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo link
-yarn exec turbo link
-pnpm exec turbo link
+### Run all apps simultaneously
+```bash
+bun dev
 ```
 
-## Useful Links
+### Run individual apps
 
-Learn more about the power of Turborepo:
+**Mobile App (Expo):**
+```bash
+cd apps/mobile
+bunx expo install [package]  # Install packages with Expo compatibility
+bun start                     # Start Expo development server
+bun ios                       # Run on iOS simulator
+bun android                   # Run on Android emulator
+bun web                       # Run in web browser
+```
 
-- [Tasks](https://turborepo.com/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.com/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.com/docs/reference/configuration)
-- [CLI Usage](https://turborepo.com/docs/reference/command-line-reference)
+**API Server:**
+```bash
+cd apps/api
+bun dev  # Runs on http://localhost:3001
+```
+
+**Admin Panel:**
+```bash
+cd apps/web
+bun dev  # Runs on http://localhost:3000
+```
+
+## Building for Production
+
+```bash
+# Build all apps
+bun build
+
+# Build specific app
+bun build --filter=mobile
+bun build --filter=api
+bun build --filter=web
+```
+
+## Code Quality
+
+```bash
+# Run linting for all apps
+bun lint
+
+# Format all TypeScript and Markdown files
+bun format
+
+# Type check all apps
+bun check-types
+```
+
+## Tech Stack
+
+- **Mobile**: Expo SDK 53, React Native 0.79, React Navigation, Expo Router
+- **Backend**: Bun, Hono, Better Auth, Drizzle ORM, PostgreSQL
+- **Admin**: Next.js 15, React 19, Tailwind CSS v4, Turbopack
+- **AI**: FAL.ai platform (nano-banana/edit model)
+- **Payments**: Adapty SDK for in-app purchases
+- **Monorepo**: Turborepo with Bun workspaces
+
+## Project Goals (Hackathon MVP)
+
+- Launch working MVP within 14 days
+- Achieve 200+ user sign-ups in the first week
+- Complete 100+ AI hairstyle try-ons
+- Maintain <8 second transformation time (90th percentile)
+- Collect 50+ user feedback responses
+
+## Contributing
+
+Please read [AGENTS.md](AGENTS.md) for development guidelines and [CLAUDE.md](CLAUDE.md) for AI assistant integration instructions.
+
+## License
+
+This project is proprietary and confidential.
