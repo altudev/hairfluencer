@@ -3,6 +3,8 @@
 ## Objective
 Deliver the secure S3 upload workflow and fal.ai invocation flow described in `todos/requirements.md` and `todos/design.md`, enabling private selfie storage and AI hairstyle generation without exposing secrets or public URLs.
 
+**Prerequisite:** Better Auth must be configured in the API and mobile app so that all upload-related routes receive authenticated requests.
+
 ## Milestones & Tasks
 - [ ] **M1: Infrastructure & Configuration**
   - [ ] Create private S3 bucket (or reuse existing) with uploads/results prefixes and lifecycle rules.

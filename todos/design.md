@@ -24,7 +24,7 @@ Translate the requirements for secure selfie uploads and fal.ai invocation into 
 ```
 
 ## Components
-- **Auth Gateway / API Route Layer**: Exposes `/uploads/presign` and `/try-ons` endpoints, enforces auth, rate limits, and audit logging.
+- **Auth Gateway / API Route Layer**: Exposes `/uploads/presign` and `/try-ons` endpoints, enforces Better Auth sessions, rate limits, and audit logging.
 - **Upload Validation Service**: Validates object metadata, optional face detection hook, writes upload records, schedules deletion jobs.
 - **Transformation Orchestrator**: Wraps fal.ai client, handles pre-signed GET generation, retry logic, and result persistence.
 - **Storage Layer**: Private S3 bucket for raw uploads (`uploads/{userId}/{uuid}.jpg`) and a separate private bucket for processed outputs (`results/{userId}/{jobId}.jpg`) each with tailored lifecycle rules.

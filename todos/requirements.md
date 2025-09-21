@@ -59,6 +59,7 @@ As the hairstyle generation service, I want to provide fal.ai with a short-lived
 - AWS account with private S3 bucket and IAM roles (API, background workers, cleanup jobs).
 - fal.ai credentials already provisioned via `FAL_API_KEY`.
 - Mobile client capable of uploading via pre-signed URLs and reporting results.
+- Better Auth configured end-to-end (API + mobile) so that upload endpoints receive authenticated requests.
 
 ## Compliance & Privacy Requirements
 - All personal data (selfies) must be encrypted at rest (SSE-S3 or SSE-KMS) and in transit (HTTPS).
