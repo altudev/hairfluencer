@@ -9,7 +9,8 @@
 ## Implementation Plan
 
 ### 1. Environment & Secrets Alignment
-- [ ] Ensure `BETTER_AUTH_SECRET` (>=32 chars) and `BETTER_AUTH_URL` are present in `apps/api/.env` and mirrored in `.env.example` without secrets.
+- [x] Ensure `BETTER_AUTH_SECRET` (>=32 chars) and `BETTER_AUTH_URL` are present in `apps/api/.env` and mirrored in `.env.example` without secrets. *(Placeholders documented; local `.env` still needs secure values.)*
+- [x] Mirror Expo/mobile Better Auth env placeholders (`EXPO_PUBLIC_*`, deep link scheme) in `apps/mobile/.env.example` to align with backend trusted origins.
 - [ ] Confirm Google OAuth env variables for Better Auth match existing Expo credentials (`EXPO_PUBLIC_GOOGLE_CLIENT_ID`), adding server-side client/secret.
 - [ ] Review PRD privacy notes; document retention policy messaging in onboarding copy once auth flows go live.
 
