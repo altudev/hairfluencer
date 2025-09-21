@@ -74,12 +74,18 @@ export default function UploadScreen() {
     if (!selectedImage) return;
 
     setIsProcessing(true);
-    // Simulate processing
+    // Navigate to generating screen with params
     setTimeout(() => {
       setIsProcessing(false);
-      // Navigate to result/styles screen
-      Alert.alert('Success', 'Your photo has been uploaded successfully!');
-    }, 1500);
+      router.push({
+        pathname: '/generating',
+        params: {
+          styleId,
+          styleName,
+          imageUri: selectedImage,
+        }
+      });
+    }, 500);
   };
 
   return (
@@ -190,7 +196,7 @@ export default function UploadScreen() {
                   </>
                 ) : (
                   <>
-                    <Text style={styles.continueButtonText}>Continue to Styles</Text>
+                    <Text style={styles.continueButtonText}>Apply the hairstyle</Text>
                     <Ionicons name="arrow-forward" size={20} color="white" />
                   </>
                 )}
