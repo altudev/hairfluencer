@@ -1,7 +1,7 @@
 # Repository Guidelines
 
 ## Project Overview (Hackathon MVP)
-Hairfluencer is an AI-powered hairstyle try-on mobile application built for a 14-day hackathon. Users upload selfies to instantly visualize new hairstyles via Nano Bana Image AI, with dual-language support (English/Spanish). The MVP targets 200+ sign-ups and 100+ try-ons in the first week.
+Hairfluencer is an AI-powered hairstyle try-on mobile application built for a 14-day hackathon. Users upload selfies to instantly visualize new hairstyles using FAL.ai's "nano-banana/edit" model, with dual-language support (English/Spanish). The MVP targets 200+ sign-ups and 100+ try-ons in the first week. Monetization is handled through Adapty for premium features and subscription management.
 
 ## Project Structure & Module Organization
 Hairfluencer is a Bun-driven Turborepo with three main applications:
@@ -42,12 +42,14 @@ Develop with Node 18+ and Bun 1.2.x. Each app requires specific environment vari
 - `BETTER_AUTH_SECRET` - Min 32 chars for session encryption
 - `BETTER_AUTH_URL` - API base URL for auth callbacks
 - `GOOGLE_CLIENT_ID` & `GOOGLE_CLIENT_SECRET` - Google OAuth credentials
-- `NANO_BANA_API_KEY` - AI service authentication (to be added)
+- `FAL_API_KEY` - FAL.ai authentication key for AI transformations
+- `FAL_MODEL_ID` - Set to "nano-banana/edit" for hairstyle editing
 - `FRONTEND_URL` - Mobile app URL for CORS
 
 ### Mobile Environment (`apps/mobile/.env`):
 - `EXPO_PUBLIC_API_URL` - Backend API URL
 - `EXPO_PUBLIC_GOOGLE_CLIENT_ID` - Google OAuth client ID for mobile
+- `EXPO_PUBLIC_ADAPTY_PUBLIC_KEY` - Adapty SDK public key for payments
 
 Never commit secrets; update `.env.example` instead. For deployment, use secure environment variable management.
 
@@ -62,7 +64,8 @@ Never commit secrets; update `.env.example` instead. For deployment, use secure 
 1. **Authentication**: Email/password + Google OAuth (✅ Completed)
 2. **Photo Upload**: Selfie validation with face detection (Pending)
 3. **Hairstyle Gallery**: Admin-managed style options with bilingual tags (Pending)
-4. **AI Transformation**: Nano Bana API integration for style application (Pending)
+4. **AI Transformation**: FAL.ai "nano-banana/edit" model integration (Pending)
 5. **Favorites System**: Save and manage favorite results (Pending)
 6. **Localization**: English/Spanish toggle throughout app (Pending)
 7. **Analytics**: Track funnel events and collect feedback (Pending)
+8. **Monetization**: Adapty paywall for premium features & subscriptions (Pending)

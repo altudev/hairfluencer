@@ -196,8 +196,10 @@ Required environment variables for the API:
 | `FRONTEND_URL` | Frontend URL for CORS | `http://localhost:3000` |
 | `GOOGLE_CLIENT_ID` | Google OAuth client ID | `123456.apps.googleusercontent.com` |
 | `GOOGLE_CLIENT_SECRET` | Google OAuth client secret | `GOCSPX-xxxxxxxxxxxxx` |
-| `NANO_BANA_API_KEY` | AI service API key (pending) | `your-api-key` |
-| `NANO_BANA_API_URL` | AI service endpoint (pending) | `https://api.nanobana.ai/v1` |
+| `FAL_API_KEY` | FAL.ai API key for AI transformations | `your-fal-api-key` |
+| `FAL_MODEL_ID` | FAL.ai model identifier | `nano-banana/edit` |
+| `ADAPTY_PUBLIC_KEY` | Adapty public SDK key | `public.adapty.xxxxx` |
+| `ADAPTY_SECRET_KEY` | Adapty server-side secret key | `secret.adapty.xxxxx` |
 
 ## Error Handling
 
@@ -274,6 +276,22 @@ Run migrations with:
 cd apps/api
 bun run db:migrate
 ```
+
+## Third-Party Integrations
+
+### FAL.ai Integration
+The API uses FAL.ai's "nano-banana/edit" model for AI-powered hairstyle transformations:
+- Model: `nano-banana/edit`
+- Documentation: https://fal.ai/models/nano-banana/edit
+- Features: Image editing with style transfer for hairstyle modifications
+- Response time: Target <8 seconds for 90th percentile
+
+### Adapty Integration
+Payment processing and subscription management through Adapty:
+- SDK: Mobile SDK for iOS/Android
+- Features: Paywall management, subscription handling, analytics
+- Documentation: https://docs.adapty.io/
+- Webhook endpoint: `/api/webhooks/adapty` (to be implemented)
 
 ## Development
 

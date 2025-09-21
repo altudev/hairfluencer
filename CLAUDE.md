@@ -58,7 +58,8 @@ bun reset-project    # Reset to blank project template
 - **Database**: PostgreSQL with Drizzle ORM
 - **Admin Panel**: Next.js 15 with Turbopack, React 19, Tailwind CSS v4
 - **Authentication**: Better Auth with email/password and Google OAuth
-- **AI Integration**: Nano Bana Image AI (external API for hairstyle transformation)
+- **AI Integration**: FAL.ai platform using "nano-banana/edit" model for hairstyle transformation
+- **Payments & Monetization**: Adapty for paywall management and in-app purchases
 
 ### Database & Authentication
 - **Drizzle ORM** configuration in `apps/api/drizzle.config.ts`
@@ -83,9 +84,13 @@ FRONTEND_URL=http://localhost:3000
 GOOGLE_CLIENT_ID=your-google-client-id
 GOOGLE_CLIENT_SECRET=your-google-client-secret
 
-# AI Service (to be added)
-NANO_BANA_API_KEY=your-api-key
-NANO_BANA_API_URL=https://api.nanobana.ai
+# FAL.ai Integration (AI hairstyle transformation)
+FAL_API_KEY=your-fal-api-key
+FAL_MODEL_ID=nano-banana/edit
+
+# Adapty Integration (mobile payments)
+ADAPTY_PUBLIC_KEY=your-adapty-public-key
+ADAPTY_SECRET_KEY=your-adapty-secret-key
 ```
 
 ### Shared Packages
