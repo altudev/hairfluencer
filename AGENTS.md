@@ -5,7 +5,7 @@ Hairfluencer is an AI-powered hairstyle try-on mobile application built for a 14
 
 ## Project Structure & Module Organization
 Hairfluencer is a Bun-driven Turborepo with three main applications:
-- `apps/mobile`: Expo Router client (PRIMARY) - User-facing mobile app for AI hairstyle try-ons (`app/` screens, `components/` shared UI, `assets/` media)
+- `apps/mobile`: Expo Router client (PRIMARY) - User-facing mobile app for AI hairstyle try-ons (`app/` screens with Expo Router navigation, `components/` shared UI, `assets/` media, `hooks/` custom React hooks, `constants/` app configuration)
 - `apps/api`: Bun + Hono + Better Auth service - Backend API handling auth, photo uploads, AI orchestration (`src/` routes, `src/db` database, `src/db/migrations`)
 - `apps/web`: Next.js 15 admin panel - Gallery management and analytics dashboard (`app/` routes, `public/` assets)
 
@@ -21,9 +21,11 @@ Shared configurations live in `packages/eslint-config` and `packages/typescript-
   - `cd apps/api && bun run db:migrate` - Apply migrations to database
   - `cd apps/api && bun run db:studio` - Open Drizzle Studio for database management
 - **Mobile specific**:
+  - `cd apps/mobile && bunx expo install [package]` - Install packages with Expo compatibility layer
   - `cd apps/mobile && bun ios` - Run on iOS simulator
   - `cd apps/mobile && bun android` - Run on Android emulator
   - `cd apps/mobile && bun start` - Start Expo development server
+  - `cd apps/mobile && bun web` - Run in web browser
 
 ## Coding Style & Naming Conventions
 TypeScript is mandatory. Run `bun run format`; Prettier enforces two-space indentation and semicolons. Use PascalCase for React components/screens, camelCase for hooks and helpers, and UPPER_SNAKE_CASE for environment keys. Keep Tailwind class lists readable and colocate feature logic with the folder it supports. ESLint flat configs from `@repo/eslint-config` are required; if you disable a rule, leave a short reason. Resolve `turbo/no-undeclared-env-vars` warnings before merging.
@@ -61,7 +63,7 @@ Never commit secrets; update `.env.example` instead. For deployment, use secure 
 - **Availability**: 99% uptime during hackathon showcase
 
 ## Key Features to Implement
-1. **Authentication**: Email/password + Google OAuth (✅ Completed)
+1. **Authentication**: Email/password + Google OAuth (✅ Completed - Better Auth configured)
 2. **Photo Upload**: Selfie validation with face detection (Pending)
 3. **Hairstyle Gallery**: Admin-managed style options with bilingual tags (Pending)
 4. **AI Transformation**: FAL.ai "nano-banana/edit" model integration (Pending)
@@ -69,3 +71,4 @@ Never commit secrets; update `.env.example` instead. For deployment, use secure 
 6. **Localization**: English/Spanish toggle throughout app (Pending)
 7. **Analytics**: Track funnel events and collect feedback (Pending)
 8. **Monetization**: Adapty paywall for premium features & subscriptions (Pending)
+9. **Navigation**: Expo Router with bottom tabs (✅ Completed - Basic structure set up)
