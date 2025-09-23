@@ -6,6 +6,7 @@ import { useEffect } from 'react';
 import 'react-native-reanimated';
 
 import { useColorScheme } from '@/hooks/useColorScheme';
+import { useAnonymousAuth } from '@/hooks/useAnonymousAuth';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import { initializeEnvironment } from '@/utils/validateEnv';
 
@@ -14,6 +15,9 @@ export default function RootLayout() {
   const [loaded] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
   });
+
+  // Use the consolidated anonymous auth hook
+  useAnonymousAuth({ autoSignIn: true });
 
   useEffect(() => {
     // Validate environment variables on app startup

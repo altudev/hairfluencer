@@ -8,6 +8,7 @@ import {
   ScrollView,
   StatusBar,
   Platform,
+  ActivityIndicator,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
@@ -17,6 +18,7 @@ import Constants from 'expo-constants';
 import { UploadScreenSkeleton } from '@/components/LoadingSkeletons';
 import { requestCameraPermission, requestGalleryPermission } from '@/utils/permissions';
 import { useAuth } from '@/hooks/useAuth';
+import { useAnonymousAuth } from '@/hooks/useAnonymousAuth';
 
 export default function UploadScreen() {
   const router = useRouter();
@@ -27,6 +29,14 @@ export default function UploadScreen() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const { isAuthenticated, isLoading: authLoading } = useAuth();
+
+  // Use the consolidated anonymous auth hook with custom error handling
+  const { isInitializing } = useAnonymousAuth({
+    autoSignIn: !authLoading && !isAuthenticated,
+    onError: () => {
+      router.push('/sign-in');
+    }
+  });
 
   useEffect(() => {
     // Simulate initial loading
@@ -94,7 +104,7 @@ export default function UploadScreen() {
     }, 500);
   };
 
-  if (isLoading || authLoading) {
+  if (isLoading || authLoading || isInitializing) {
     return <UploadScreenSkeleton />;
   }
 
@@ -106,26 +116,11 @@ export default function UploadScreen() {
           style={styles.authGateGradient}
         >
           <View style={styles.authGateCard}>
-            <View style={styles.authGateIcon}>
-              <Ionicons name="lock-closed" size={36} color="white" />
-            </View>
-            <Text style={styles.authGateTitle}>Sign In Required</Text>
+            <ActivityIndicator size="large" color="#FFB366" />
+            <Text style={styles.authGateTitle}>Preparing your session…</Text>
             <Text style={styles.authGateSubtitle}>
-              Create an account or sign in to upload selfies and see your AI transformations.
+              Hang tight—we're getting things ready for your next transformation.
             </Text>
-            <TouchableOpacity
-              style={styles.authGateButton}
-              onPress={() => router.push('/sign-in')}
-              activeOpacity={0.8}
-            >
-              <LinearGradient
-                colors={['#FF8C42', '#FFB366']}
-                style={styles.authGateButtonGradient}
-              >
-                <Ionicons name="log-in" size={18} color="white" />
-                <Text style={styles.authGateButtonText}>Sign In to Continue</Text>
-              </LinearGradient>
-            </TouchableOpacity>
           </View>
         </LinearGradient>
       </View>
@@ -436,22 +431,14 @@ const styles = StyleSheet.create({
   },
   authGateCard: {
     width: '100%',
-    maxWidth: 360,
+    maxWidth: 320,
     backgroundColor: 'rgba(255, 255, 255, 0.08)',
     borderRadius: 24,
-    padding: 28,
+    padding: 32,
     alignItems: 'center',
-    gap: 18,
+    gap: 20,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.12)',
-  },
-  authGateIcon: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    backgroundColor: 'rgba(255, 140, 66, 0.25)',
-    justifyContent: 'center',
-    alignItems: 'center',
   },
   authGateTitle: {
     fontSize: 22,
@@ -461,25 +448,8 @@ const styles = StyleSheet.create({
   },
   authGateSubtitle: {
     fontSize: 14,
-    color: 'rgba(255, 255, 255, 0.7)',
+    color: 'rgba(255, 255, 255, 0.75)',
     textAlign: 'center',
     lineHeight: 20,
-  },
-  authGateButton: {
-    alignSelf: 'stretch',
-    borderRadius: 16,
-    overflow: 'hidden',
-  },
-  authGateButtonGradient: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    paddingVertical: 14,
-  },
-  authGateButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: 'white',
   },
 });

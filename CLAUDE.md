@@ -35,7 +35,8 @@ bun lint             # Run ESLint
 ### API app (apps/api):
 ```bash
 cd apps/api
-bun dev              # Start Hono server with hot reload (port 3000)
+bun dev              # Start Hono server with hot reload (port 3001)
+# Note: Default port changed from 3000 to 3001 to avoid conflicts
 ```
 
 ### Mobile app (apps/mobile):
@@ -79,8 +80,9 @@ DRIZZLE_DATABASE_URL=postgres://user:password@localhost:5432/hairfluencer
 
 # Authentication
 BETTER_AUTH_SECRET=minimum-32-character-secret-key
-BETTER_AUTH_URL=http://localhost:3000
+BETTER_AUTH_URL=http://localhost:3001
 FRONTEND_URL=http://localhost:3000
+# Note: API runs on port 3001, frontend on port 3000
 
 # Google OAuth (for mobile app)
 GOOGLE_CLIENT_ID=your-google-client-id

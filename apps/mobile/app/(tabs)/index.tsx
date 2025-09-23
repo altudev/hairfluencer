@@ -24,7 +24,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 
 // Internal imports
-import { hairstyles as localHairstyles } from '@/assets/images/hairstyleData';
+import { hairstyles as localHairstyles } from '@/constants/hairstyleData';
 import HairstyleCard, { HairstyleData } from '@/components/HairstyleCard';
 import { HomeScreenSkeleton } from '@/components/LoadingSkeletons';
 import { ANIMATION, CATEGORIES } from '@/constants';
@@ -64,7 +64,7 @@ export default function HomeScreen() {
   const router = useRouter();
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const [isLoading, setIsLoading] = useState(true);
-  const { user, isAuthenticated } = useAuth();
+  const { user } = useAuth();
 
   const displayName = useMemo(() => {
     if (!user) return 'Guest';
@@ -196,24 +196,14 @@ export default function HomeScreen() {
                 <TouchableOpacity style={styles.notificationButton}>
                   <Ionicons name="notifications-outline" size={22} color="#666" />
                 </TouchableOpacity>
-                <TouchableOpacity
-                  style={isAuthenticated ? styles.authChip : styles.signInChip}
-                  onPress={() => {
-                    if (!isAuthenticated) {
-                      router.push('/sign-in');
-                    }
-                  }}
-                  activeOpacity={0.8}
-                >
+                <View style={styles.authChip}>
                   <Ionicons
-                    name={isAuthenticated ? 'person-circle-outline' : 'log-in-outline'}
-                    size={isAuthenticated ? 20 : 18}
-                    color={isAuthenticated ? '#4A2C83' : 'white'}
+                    name="person-circle-outline"
+                    size={20}
+                    color="#4A2C83"
                   />
-                  <Text style={isAuthenticated ? styles.authChipText : styles.signInChipText}>
-                    {isAuthenticated ? displayName : 'Sign In'}
-                  </Text>
-                </TouchableOpacity>
+                  <Text style={styles.authChipText}>{displayName}</Text>
+                </View>
               </View>
             </View>
 
@@ -413,25 +403,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     color: '#4A2C83',
-  },
-  signInChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FF8C42',
-    borderRadius: 20,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    gap: 6,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 6,
-    elevation: 4,
-  },
-  signInChipText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: 'white',
   },
   searchContainer: {
     flexDirection: 'row',

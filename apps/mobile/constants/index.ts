@@ -158,7 +158,7 @@ export const ERROR_MESSAGES = {
   TRANSFORMATION_FAILED: 'Failed to generate hairstyle. Please try again.',
   PERMISSION_DENIED: 'Permission denied. Please enable access in settings.',
   FILE_TOO_LARGE: 'File size too large. Maximum size is 10MB.',
-  UNAUTHORIZED: 'Please sign in to continue.',
+  UNAUTHORIZED: 'Session expired. Please try again.',
   SERVER_ERROR: 'Server error. Our team has been notified.',
 } as const;
 

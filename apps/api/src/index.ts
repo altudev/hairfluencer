@@ -3,6 +3,7 @@ import { cors } from 'hono/cors';
 import type { AuthContextVariables } from './auth';
 import { AUTH_TRUSTED_ORIGINS, authApi, authHandler } from './auth';
 import { createV1Router } from './routes/v1';
+import { anonymousSignInRateLimit, generalApiRateLimit } from './middleware/rate-limit';
 
 const app = new Hono<{ Variables: AuthContextVariables }>();
 
@@ -50,6 +51,14 @@ app.use('*', async (c, next) => {
 
   return next();
 });
+
+// Apply rate limiting to anonymous sign-in specifically
+app.use('/api/auth/sign-in/anonymous', anonymousSignInRateLimit);
+
+// Apply general rate limiting to all other auth routes
+app.use('/api/auth/*', generalApiRateLimit);
+
+// Handle auth routes
 app.all('/api/auth/*', (c) => authHandler(c.req.raw));
 
 app.route('/api/v1', createV1Router());
@@ -65,4 +74,14 @@ app.get('/', (c) => {
   return c.text('Hello Hono!');
 });
 
-export default app;
+const port = process.env.PORT || 3001;
+
+export default {
+  port,
+  fetch: app.fetch,
+};
+
+// Log server start when running directly
+if (import.meta.main) {
+  console.log(`Started development server: http://localhost:${port}`);
+}

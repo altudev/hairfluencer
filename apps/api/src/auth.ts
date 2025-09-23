@@ -1,6 +1,7 @@
 import { betterAuth } from "better-auth";
 import { expo } from "@better-auth/expo";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { anonymous } from "better-auth/plugins";
 import { db } from "./db";
 
 const requiredEnvVars = {
@@ -71,7 +72,18 @@ export const auth = betterAuth({
   database: drizzleAdapter(db, {
     provider: "pg", // PostgreSQL provider
   }),
-  plugins: [expo()],
+  plugins: [
+    expo(),
+    anonymous({
+      onLinkAccount: async ({ anonymousUser, newUser }) => {
+        // Placeholder hook to migrate anonymous session artifacts (favorites, try-ons, etc.).
+        console.info(
+          "Linking anonymous account",
+          JSON.stringify({ anonymousUserId: anonymousUser.id, newUserId: newUser.id }),
+        );
+      },
+    }),
+  ],
   emailAndPassword: {
     enabled: true,
     minPasswordLength: 8,
