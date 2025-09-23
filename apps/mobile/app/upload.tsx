@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   StyleSheet,
   Text,
@@ -18,8 +18,7 @@ import Constants from 'expo-constants';
 import { UploadScreenSkeleton } from '@/components/LoadingSkeletons';
 import { requestCameraPermission, requestGalleryPermission } from '@/utils/permissions';
 import { useAuth } from '@/hooks/useAuth';
-import { authClient } from '@/lib/auth-client';
-import { showErrorAlert } from '@/utils/errorAlert';
+import { useAnonymousAuth } from '@/hooks/useAnonymousAuth';
 
 export default function UploadScreen() {
   const router = useRouter();
@@ -29,8 +28,15 @@ export default function UploadScreen() {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const { isAuthenticated, isLoading: authLoading, refetch } = useAuth();
-  const attemptedAnonymousSignInRef = useRef(false);
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
+
+  // Use the consolidated anonymous auth hook with custom error handling
+  const { isInitializing } = useAnonymousAuth({
+    autoSignIn: !authLoading && !isAuthenticated,
+    onError: () => {
+      router.push('/sign-in');
+    }
+  });
 
   useEffect(() => {
     // Simulate initial loading
@@ -98,31 +104,9 @@ export default function UploadScreen() {
     }, 500);
   };
 
-  if (isLoading || authLoading) {
+  if (isLoading || authLoading || isInitializing) {
     return <UploadScreenSkeleton />;
   }
-
-  useEffect(() => {
-    if (authLoading) return;
-    if (isAuthenticated) return;
-    if (attemptedAnonymousSignInRef.current) return;
-
-    attemptedAnonymousSignInRef.current = true;
-
-    const bootstrapAnonymousSession = async () => {
-      try {
-        await authClient.signIn.anonymous();
-        await refetch();
-      } catch (error) {
-        attemptedAnonymousSignInRef.current = false;
-        console.error('Anonymous session recovery failed', error);
-        showErrorAlert(new Error('Unable to prepare your session. Please try again or sign in manually.'));
-        router.push('/sign-in');
-      }
-    };
-
-    void bootstrapAnonymousSession();
-  }, [authLoading, isAuthenticated, refetch]);
 
   if (!isAuthenticated) {
     return (
