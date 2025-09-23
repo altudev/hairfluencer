@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
 import type { AuthContextVariables } from '../../auth';
+import { requireAuth } from '../../middleware/require-auth';
 
 const sampleFavorites = [
   {
@@ -13,18 +14,10 @@ const sampleFavorites = [
 export const createFavoritesRoutes = () => {
   const app = new Hono<{ Variables: AuthContextVariables }>();
 
-  app.get('/', (c) => {
-    const user = c.get('user');
+  app.use('*', requireAuth);
 
-    if (!user) {
-      return c.json(
-        {
-          error: 'UNAUTHORIZED',
-          message: 'Sign-in required to view favorites.',
-        },
-        401,
-      );
-    }
+  app.get('/', (c) => {
+    const user = c.get('user')!;
 
     return c.json({
       data: sampleFavorites,
@@ -37,17 +30,7 @@ export const createFavoritesRoutes = () => {
   });
 
   app.post('/', async (c) => {
-    const user = c.get('user');
-
-    if (!user) {
-      return c.json(
-        {
-          error: 'UNAUTHORIZED',
-          message: 'Sign-in required to save favorites.',
-        },
-        401,
-      );
-    }
+    const user = c.get('user')!;
 
     const payload = await c.req.json();
 
@@ -67,17 +50,7 @@ export const createFavoritesRoutes = () => {
   });
 
   app.delete('/:favoriteId', (c) => {
-    const user = c.get('user');
-
-    if (!user) {
-      return c.json(
-        {
-          error: 'UNAUTHORIZED',
-          message: 'Sign-in required to remove favorites.',
-        },
-        401,
-      );
-    }
+    const user = c.get('user')!;
 
     const { favoriteId } = c.req.param();
 

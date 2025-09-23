@@ -2,6 +2,7 @@ import { ApiError } from '@fal-ai/client';
 import type { Context } from 'hono';
 import { Hono } from 'hono';
 import type { AuthContextVariables } from '../../auth';
+import { requireAuth } from '../../middleware/require-auth';
 import {
   getHairstyleGenerationStatus,
   submitHairstyleGeneration,
@@ -73,19 +74,9 @@ type AuthedContext = Context<{ Variables: AuthContextVariables }>;
 export const createTryOnRoutes = () => {
   const app = new Hono<{ Variables: AuthContextVariables }>();
 
+  app.use('*', requireAuth);
+
   app.post('/', async (c) => {
-    const user = c.get('user');
-
-    if (!user) {
-      return c.json(
-        {
-          error: 'UNAUTHORIZED',
-          message: 'Sign-in required to queue hairstyle transformations.',
-        },
-        401,
-      );
-    }
-
     const clientKey = getClientIdentifier(c);
 
     try {
@@ -115,18 +106,6 @@ export const createTryOnRoutes = () => {
   });
 
   app.get('/:jobId', async (c) => {
-    const user = c.get('user');
-
-    if (!user) {
-      return c.json(
-        {
-          error: 'UNAUTHORIZED',
-          message: 'Sign-in required to view hairstyle transformation status.',
-        },
-        401,
-      );
-    }
-
     const clientKey = getClientIdentifier(c);
     const { jobId } = c.req.param();
 
