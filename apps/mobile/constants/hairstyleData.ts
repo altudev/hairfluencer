@@ -93,4 +93,4 @@ export const hairstyles: Hairstyle[] = [
   },
 ];
 
-export const avatarImage = require('./avatars/placeholder-avatar.png');
+export const avatarImage = require('../assets/images/avatars/placeholder-avatar.png');

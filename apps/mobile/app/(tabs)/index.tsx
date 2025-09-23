@@ -24,7 +24,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 
 // Internal imports
-import { hairstyles as localHairstyles } from '@/assets/images/hairstyleData';
+import { hairstyles as localHairstyles } from '@/constants/hairstyleData';
 import HairstyleCard, { HairstyleData } from '@/components/HairstyleCard';
 import { HomeScreenSkeleton } from '@/components/LoadingSkeletons';
 import { ANIMATION, CATEGORIES } from '@/constants';
