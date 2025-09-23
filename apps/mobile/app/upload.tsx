@@ -19,6 +19,7 @@ import { UploadScreenSkeleton } from '@/components/LoadingSkeletons';
 import { requestCameraPermission, requestGalleryPermission } from '@/utils/permissions';
 import { useAuth } from '@/hooks/useAuth';
 import { authClient } from '@/lib/auth-client';
+import { showErrorAlert } from '@/utils/errorAlert';
 
 export default function UploadScreen() {
   const router = useRouter();
@@ -115,6 +116,8 @@ export default function UploadScreen() {
       } catch (error) {
         attemptedAnonymousSignInRef.current = false;
         console.error('Anonymous session recovery failed', error);
+        showErrorAlert(new Error('Unable to prepare your session. Please try again or sign in manually.'));
+        router.push('/sign-in');
       }
     };
 

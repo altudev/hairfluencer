@@ -9,6 +9,7 @@ import { useColorScheme } from '@/hooks/useColorScheme';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import { initializeEnvironment } from '@/utils/validateEnv';
 import { authClient } from '@/lib/auth-client';
+import { showErrorAlert } from '@/utils/errorAlert';
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
@@ -37,6 +38,7 @@ export default function RootLayout() {
       } catch (error) {
         attemptedAnonymousSignInRef.current = false;
         console.error('Anonymous sign-in failed', error);
+        showErrorAlert(new Error('Unable to start your session. Please check your connection and try again.'));
       }
     };
 
