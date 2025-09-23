@@ -8,6 +8,13 @@
       "when": 1758650799029,
       "tag": "0000_mute_mariko_yashida",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1758654870325,
+      "tag": "0001_add_anonymous_user_flag",
+      "breakpoints": true
     }
   ]
 }
