@@ -5,7 +5,6 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
-  Dimensions,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -20,8 +19,6 @@ interface State {
   error: Error | null;
   errorInfo: ErrorInfo | null;
 }
-
-const { width } = Dimensions.get('window');
 
 class ErrorBoundary extends Component<Props, State> {
   public state: State = {
@@ -76,7 +73,7 @@ class ErrorBoundary extends Component<Props, State> {
 
               <Text style={styles.title}>Oops! Something went wrong</Text>
               <Text style={styles.subtitle}>
-                We encountered an unexpected error. Don't worry, your data is safe.
+                We encountered an unexpected error. Don&apos;t worry, your data is safe.
               </Text>
 
               <TouchableOpacity

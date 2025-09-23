@@ -1,5 +1,5 @@
 // React imports
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 // React Native imports
 import {
@@ -18,18 +18,18 @@ import {
 } from 'react-native';
 
 // Expo imports
-import { FontAwesome, Ionicons, MaterialIcons } from '@expo/vector-icons';
+import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import Constants from 'expo-constants';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 
 // Internal imports
-import { avatarImage, hairstyles as localHairstyles } from '@/assets/images/hairstyleData';
+import { hairstyles as localHairstyles } from '@/assets/images/hairstyleData';
 import HairstyleCard, { HairstyleData } from '@/components/HairstyleCard';
 import { HomeScreenSkeleton } from '@/components/LoadingSkeletons';
-import OptimizedImage from '@/components/OptimizedImage';
-import { ANIMATION, CATEGORIES, COLORS } from '@/constants';
+import { ANIMATION, CATEGORIES } from '@/constants';
 import useStore from '@/stores/useStore';
+import { useAuth } from '@/hooks/useAuth';
 
 const { width } = Dimensions.get('window');
 
@@ -64,6 +64,20 @@ export default function HomeScreen() {
   const router = useRouter();
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const [isLoading, setIsLoading] = useState(true);
+  const { user, isAuthenticated } = useAuth();
+
+  const displayName = useMemo(() => {
+    if (!user) return 'Guest';
+    if (user.name) {
+      return user.name.split(' ')[0];
+    }
+
+    if (user.email) {
+      return user.email.split('@')[0];
+    }
+
+    return 'Guest';
+  }, [user]);
 
   // Zustand store
   const {
@@ -182,11 +196,24 @@ export default function HomeScreen() {
                 <TouchableOpacity style={styles.notificationButton}>
                   <Ionicons name="notifications-outline" size={22} color="#666" />
                 </TouchableOpacity>
-                <OptimizedImage
-                  source={avatarImage}
-                  style={styles.avatar}
-                  priority="low"
-                />
+                <TouchableOpacity
+                  style={isAuthenticated ? styles.authChip : styles.signInChip}
+                  onPress={() => {
+                    if (!isAuthenticated) {
+                      router.push('/sign-in');
+                    }
+                  }}
+                  activeOpacity={0.8}
+                >
+                  <Ionicons
+                    name={isAuthenticated ? 'person-circle-outline' : 'log-in-outline'}
+                    size={isAuthenticated ? 20 : 18}
+                    color={isAuthenticated ? '#4A2C83' : 'white'}
+                  />
+                  <Text style={isAuthenticated ? styles.authChipText : styles.signInChipText}>
+                    {isAuthenticated ? displayName : 'Sign In'}
+                  </Text>
+                </TouchableOpacity>
               </View>
             </View>
 
@@ -368,14 +395,43 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
-  avatar: {
-    width: 40,
-    height: 40,
+  authChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
     borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    gap: 6,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
+    elevation: 3,
+  },
+  authChipText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#4A2C83',
+  },
+  signInChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FF8C42',
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    gap: 6,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    elevation: 4,
+  },
+  signInChipText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: 'white',
   },
   searchContainer: {
     flexDirection: 'row',

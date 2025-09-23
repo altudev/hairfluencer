@@ -1,15 +1,11 @@
 import useStore from './useStore';
 import {
-  ApiError,
-  handleApiResponse,
-  retryRequest,
   logError,
   showErrorAlert,
   showSuccessAlert,
 } from '@/utils/errorHandler';
-import { API, SUCCESS_MESSAGES } from '@/constants';
-
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3001';
+import { SUCCESS_MESSAGES } from '@/constants';
+import { authClient } from '@/lib/auth-client';
 
 interface ApiResponse<T> {
   data?: T;
@@ -71,32 +67,17 @@ export const useApi = () => {
     setLoading(true);
 
     try {
-      const request = async () => {
-        const response = await fetch(`${API_BASE_URL}${API.ENDPOINTS.AUTH}/sign-in`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ email, password }),
-          signal: AbortSignal.timeout(API.TIMEOUT),
-        });
-
-        return handleApiResponse(response);
-      };
-
-      const data = await retryRequest(request, API.RETRY_COUNT);
+      const data = await authClient.signIn.email({
+        email,
+        password,
+      });
       return {
         success: true,
         data,
       };
     } catch (error) {
       logError(error, 'login');
-
-      if (error instanceof ApiError && error.statusCode === 401) {
-        showErrorAlert(new Error('Invalid email or password'));
-      } else {
-        showErrorAlert(error);
-      }
+      showErrorAlert(error);
 
       return {
         success: false,
@@ -115,20 +96,11 @@ export const useApi = () => {
     setLoading(true);
 
     try {
-      const request = async () => {
-        const response = await fetch(`${API_BASE_URL}${API.ENDPOINTS.AUTH}/sign-up`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ email, password, name }),
-          signal: AbortSignal.timeout(API.TIMEOUT),
-        });
-
-        return handleApiResponse(response);
-      };
-
-      const data = await retryRequest(request, API.RETRY_COUNT);
+      const data = await authClient.signUp.email({
+        email,
+        password,
+        name,
+      });
       showSuccessAlert('Account created successfully!');
       return {
         success: true,
@@ -148,10 +120,7 @@ export const useApi = () => {
 
   const logout = async (): Promise<void> => {
     try {
-      await fetch(`${API_BASE_URL}${API.ENDPOINTS.AUTH}/sign-out`, {
-        method: 'POST',
-        signal: AbortSignal.timeout(API.TIMEOUT),
-      });
+      await authClient.signOut();
     } catch (error) {
       logError(error, 'logout');
       // Don't show error for logout - just log it

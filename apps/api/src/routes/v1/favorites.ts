@@ -1,4 +1,6 @@
 import { Hono } from 'hono';
+import type { AuthContextVariables } from '../../auth';
+import { requireAuth } from '../../middleware/require-auth';
 
 const sampleFavorites = [
   {
@@ -10,19 +12,26 @@ const sampleFavorites = [
 ];
 
 export const createFavoritesRoutes = () => {
-  const app = new Hono();
+  const app = new Hono<{ Variables: AuthContextVariables }>();
+
+  app.use('*', requireAuth);
 
   app.get('/', (c) => {
+    const user = c.get('user')!;
+
     return c.json({
       data: sampleFavorites,
       meta: {
         total: sampleFavorites.length,
         note: 'Favorites should be scoped by authenticated user',
+        userId: user.id,
       },
     });
   });
 
   app.post('/', async (c) => {
+    const user = c.get('user')!;
+
     const payload = await c.req.json();
 
     return c.json(
@@ -33,6 +42,7 @@ export const createFavoritesRoutes = () => {
         },
         meta: {
           note: 'Persist to database and tie to user session',
+          userId: user.id,
         },
       },
       201,
@@ -40,6 +50,8 @@ export const createFavoritesRoutes = () => {
   });
 
   app.delete('/:favoriteId', (c) => {
+    const user = c.get('user')!;
+
     const { favoriteId } = c.req.param();
 
     return c.json({
@@ -48,6 +60,7 @@ export const createFavoritesRoutes = () => {
       },
       meta: {
         note: 'Return appropriate status when deletion is wired up',
+        userId: user.id,
       },
     });
   });

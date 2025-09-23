@@ -1,6 +1,8 @@
 import { ApiError } from '@fal-ai/client';
 import type { Context } from 'hono';
 import { Hono } from 'hono';
+import type { AuthContextVariables } from '../../auth';
+import { requireAuth } from '../../middleware/require-auth';
 import {
   getHairstyleGenerationStatus,
   submitHairstyleGeneration,
@@ -67,8 +69,12 @@ class TryOnQueueLimitError extends Error {
   }
 }
 
+type AuthedContext = Context<{ Variables: AuthContextVariables }>;
+
 export const createTryOnRoutes = () => {
-  const app = new Hono();
+  const app = new Hono<{ Variables: AuthContextVariables }>();
+
+  app.use('*', requireAuth);
 
   app.post('/', async (c) => {
     const clientKey = getClientIdentifier(c);
@@ -154,7 +160,7 @@ export const createTryOnRoutes = () => {
   return app;
 };
 
-const parseJsonBody = async (c: Context): Promise<Record<string, unknown>> => {
+const parseJsonBody = async (c: AuthedContext): Promise<Record<string, unknown>> => {
   const request = c.req.raw;
   const contentLengthHeader = request.headers.get('content-length');
 
@@ -346,7 +352,7 @@ const buildMeta = (job: HairstyleGenerationJob, queue: QueueMetadata) => ({
   },
 });
 
-const handleError = (error: unknown, c: Context) => {
+const handleError = (error: unknown, c: AuthedContext) => {
   if (error instanceof TryOnValidationError) {
     return c.json(
       {
@@ -491,7 +497,12 @@ const mapUrlError = (reason: UrlValidationFailureReason) => {
   }
 };
 
-const getClientIdentifier = (c: Context) => {
+const getClientIdentifier = (c: AuthedContext) => {
+  const user = c.get('user');
+  if (user?.id) {
+    return `user:${user.id}`;
+  }
+
   const headers = c.req;
   const explicitUser = headers.header('x-user-id');
   if (explicitUser) {

@@ -1,12 +1,12 @@
 import { betterAuth } from "better-auth";
+import { expo } from "@better-auth/expo";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { db } from "./db";
 
-// Validate required environment variables
 const requiredEnvVars = {
   BETTER_AUTH_SECRET: process.env.BETTER_AUTH_SECRET,
   BETTER_AUTH_URL: process.env.BETTER_AUTH_URL,
-  DATABASE_URL: process.env.DATABASE_URL
+  DATABASE_URL: process.env.DATABASE_URL,
 };
 
 for (const [key, value] of Object.entries(requiredEnvVars)) {
@@ -15,21 +15,63 @@ for (const [key, value] of Object.entries(requiredEnvVars)) {
   }
 }
 
-// Validate secret strength
 if (process.env.BETTER_AUTH_SECRET && process.env.BETTER_AUTH_SECRET.length < 32) {
   console.warn('WARNING: BETTER_AUTH_SECRET should be at least 32 characters for production');
 }
 
-// Check for Google OAuth credentials
 const googleEnabled = process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET;
 if (!googleEnabled) {
   console.warn('Google OAuth is disabled. Set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET to enable.');
 }
 
+const defaultFrontendOrigin = process.env.FRONTEND_URL ?? 'http://localhost:3000';
+const rawMobileScheme = process.env.MOBILE_DEEP_LINK_SCHEME?.trim();
+const mobileScheme = rawMobileScheme && rawMobileScheme.length > 0 ? rawMobileScheme : 'hairfluencer';
+const expoDevClient = process.env.EXPO_DEV_CLIENT_URL;
+
+const trustedOriginsSet = new Set<string>();
+
+const normalizeMobileScheme = (scheme: string): string => {
+  const trimmed = scheme.trim();
+
+  if (!trimmed) {
+    throw new Error('MOBILE_DEEP_LINK_SCHEME must not be empty when provided');
+  }
+
+  const candidate = trimmed.replace('://', '');
+
+  if (!/^[a-z][a-z0-9+.-]*$/i.test(candidate)) {
+    throw new Error(`Invalid deep link scheme: ${scheme}`);
+  }
+
+  return trimmed.includes('://') ? trimmed : `${trimmed}://`;
+};
+
+const registerOrigin = (origin?: string | null) => {
+  if (!origin) return;
+  const trimmed = origin.trim();
+  if (!trimmed) return;
+  trustedOriginsSet.add(trimmed);
+};
+
+registerOrigin(defaultFrontendOrigin);
+registerOrigin(expoDevClient);
+registerOrigin(normalizeMobileScheme(mobileScheme));
+
+const configuredOrigins = process.env.BETTER_AUTH_TRUSTED_ORIGINS
+  ?.split(',')
+  .map(origin => origin.trim())
+  .filter(Boolean);
+
+configuredOrigins?.forEach(registerOrigin);
+
+const trustedOrigins = Array.from(trustedOriginsSet);
+
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
     provider: "pg", // PostgreSQL provider
   }),
+  plugins: [expo()],
   emailAndPassword: {
     enabled: true,
     minPasswordLength: 8,
@@ -48,9 +90,17 @@ export const auth = betterAuth({
     } : undefined,
   },
   // Mobile app specific settings
-  trustedOrigins: [
-    process.env.FRONTEND_URL || 'http://localhost:3000',
-    'exp://localhost:8081', // Expo development
-    'hairfluencer://', // Mobile app deep link
-  ],
+  trustedOrigins,
 });
+
+export const AUTH_TRUSTED_ORIGINS = trustedOrigins;
+export const authHandler = auth.handler;
+export const authApi = auth.api;
+export const authInfer = auth.$Infer;
+
+export type AuthSession = typeof auth.$Infer.Session.session;
+export type AuthUser = typeof auth.$Infer.Session.user;
+export type AuthContextVariables = {
+  user: AuthUser | null;
+  session: AuthSession | null;
+};

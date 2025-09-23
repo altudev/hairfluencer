@@ -1,10 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   StyleSheet,
   Text,
   View,
   Animated,
-  Dimensions,
   StatusBar,
   Platform,
 } from 'react-native';
@@ -13,9 +12,7 @@ import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import Constants from 'expo-constants';
 import Svg, { Circle } from 'react-native-svg';
-import useApi from '@/stores/useApi';
-
-const { width } = Dimensions.get('window');
+import { useApi } from '@/stores/useApi';
 
 interface StatusStep {
   id: number;
@@ -71,7 +68,31 @@ export default function GeneratingScreen() {
         useNativeDriver: true,
       })
     ).start();
+  }, [fadeAnim, scaleAnim, rotateAnim]);
+
+  const updateStatusSteps = useCallback((stepIndex: number) => {
+    setStatusSteps(prev => prev.map((step, index) => ({
+      ...step,
+      completed: index < stepIndex,
+      active: index === stepIndex,
+    })));
   }, []);
+
+  const mockApiCall = useCallback(async () => {
+    // Use the API hook to generate hairstyle
+    const result = await generateHairstyle(imageUri, styleId, styleName);
+
+    if (result.success) {
+      // Navigate to home screen with success message
+      router.push({
+        pathname: '/(tabs)',
+        params: { success: 'true', transformationId: result.data?.id }
+      });
+    } else {
+      // Handle error - navigate back with error message
+      router.back();
+    }
+  }, [generateHairstyle, imageUri, router, styleId, styleName]);
 
   useEffect(() => {
     // Simulate progress
@@ -90,7 +111,7 @@ export default function GeneratingScreen() {
     }, 50);
 
     return () => clearInterval(progressInterval);
-  }, []);
+  }, [mockApiCall]);
 
   useEffect(() => {
     // Update status steps based on progress
@@ -101,31 +122,7 @@ export default function GeneratingScreen() {
       setCurrentStepIndex(newStepIndex);
       updateStatusSteps(newStepIndex);
     }
-  }, [progress]);
-
-  const updateStatusSteps = (stepIndex: number) => {
-    setStatusSteps(prev => prev.map((step, index) => ({
-      ...step,
-      completed: index < stepIndex,
-      active: index === stepIndex,
-    })));
-  };
-
-  const mockApiCall = async () => {
-    // Use the API hook to generate hairstyle
-    const result = await generateHairstyle(imageUri, styleId, styleName);
-
-    if (result.success) {
-      // Navigate to home screen with success message
-      router.push({
-        pathname: '/(tabs)',
-        params: { success: 'true', transformationId: result.data?.id }
-      });
-    } else {
-      // Handle error - navigate back with error message
-      router.back();
-    }
-  };
+  }, [currentStepIndex, progress, updateStatusSteps]);
 
   const spin = rotateAnim.interpolate({
     inputRange: [0, 1],

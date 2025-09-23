@@ -6,8 +6,6 @@ import {
   TouchableOpacity,
   Image,
   ScrollView,
-  Alert,
-  Dimensions,
   StatusBar,
   Platform,
 } from 'react-native';
@@ -18,8 +16,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import Constants from 'expo-constants';
 import { UploadScreenSkeleton } from '@/components/LoadingSkeletons';
 import { requestCameraPermission, requestGalleryPermission } from '@/utils/permissions';
-
-const { width, height } = Dimensions.get('window');
+import { useAuth } from '@/hooks/useAuth';
 
 export default function UploadScreen() {
   const router = useRouter();
@@ -29,6 +26,7 @@ export default function UploadScreen() {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
 
   useEffect(() => {
     // Simulate initial loading
@@ -96,8 +94,42 @@ export default function UploadScreen() {
     }, 500);
   };
 
-  if (isLoading) {
+  if (isLoading || authLoading) {
     return <UploadScreenSkeleton />;
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <View style={styles.authGateContainer}>
+        <LinearGradient
+          colors={['#0f0f23', '#1a1a3e', '#2d1b69']}
+          style={styles.authGateGradient}
+        >
+          <View style={styles.authGateCard}>
+            <View style={styles.authGateIcon}>
+              <Ionicons name="lock-closed" size={36} color="white" />
+            </View>
+            <Text style={styles.authGateTitle}>Sign In Required</Text>
+            <Text style={styles.authGateSubtitle}>
+              Create an account or sign in to upload selfies and see your AI transformations.
+            </Text>
+            <TouchableOpacity
+              style={styles.authGateButton}
+              onPress={() => router.push('/sign-in')}
+              activeOpacity={0.8}
+            >
+              <LinearGradient
+                colors={['#FF8C42', '#FFB366']}
+                style={styles.authGateButtonGradient}
+              >
+                <Ionicons name="log-in" size={18} color="white" />
+                <Text style={styles.authGateButtonText}>Sign In to Continue</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          </View>
+        </LinearGradient>
+      </View>
+    );
   }
 
   return (
@@ -389,6 +421,64 @@ const styles = StyleSheet.create({
   },
   continueButtonText: {
     fontSize: 18,
+    fontWeight: '600',
+    color: 'white',
+  },
+  authGateContainer: {
+    flex: 1,
+    backgroundColor: '#0f0f23',
+  },
+  authGateGradient: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+  },
+  authGateCard: {
+    width: '100%',
+    maxWidth: 360,
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    borderRadius: 24,
+    padding: 28,
+    alignItems: 'center',
+    gap: 18,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.12)',
+  },
+  authGateIcon: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: 'rgba(255, 140, 66, 0.25)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  authGateTitle: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: 'white',
+    textAlign: 'center',
+  },
+  authGateSubtitle: {
+    fontSize: 14,
+    color: 'rgba(255, 255, 255, 0.7)',
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+  authGateButton: {
+    alignSelf: 'stretch',
+    borderRadius: 16,
+    overflow: 'hidden',
+  },
+  authGateButtonGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 14,
+  },
+  authGateButtonText: {
+    fontSize: 16,
     fontWeight: '600',
     color: 'white',
   },
