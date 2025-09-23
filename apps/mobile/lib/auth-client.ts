@@ -2,7 +2,10 @@ import { createAuthClient } from "better-auth/react";
 import { expoClient } from "@better-auth/expo/client";
 import * as SecureStore from "expo-secure-store";
 
-const baseURL = process.env.EXPO_PUBLIC_API_URL ?? process.env.API_URL;
+const baseURL =
+  process.env.EXPO_PUBLIC_API_URL ??
+  process.env.API_URL ??
+  (process.env.NODE_ENV === 'development' ? 'http://localhost:3001' : undefined);
 
 if (!baseURL) {
   throw new Error(
