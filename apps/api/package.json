@@ -1,7 +1,7 @@
 {
   "name": "api",
   "scripts": {
-    "dev": "bun run --hot src/index.ts",
+    "dev": "bun run --hot src/index.ts -p 3001",
     "db:generate": "bunx drizzle-kit generate",
     "db:migrate": "bunx drizzle-kit migrate",
     "db:push": "bunx drizzle-kit push",
