@@ -65,4 +65,14 @@ app.get('/', (c) => {
   return c.text('Hello Hono!');
 });
 
-export default app;
+const port = process.env.PORT || 3001;
+
+export default {
+  port,
+  fetch: app.fetch,
+};
+
+// Log server start when running directly
+if (import.meta.main) {
+  console.log(`Started development server: http://localhost:${port}`);
+}
