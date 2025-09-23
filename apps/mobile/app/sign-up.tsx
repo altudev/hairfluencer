@@ -114,7 +114,6 @@ export default function SignUpScreen() {
               </LinearGradient>
             </View>
             <Text style={styles.appName}>Hairfluencer</Text>
-            <Text style={styles.tagline}>Create your account to start styling</Text>
           </LinearGradient>
 
           <View style={styles.formCard}>
@@ -276,13 +275,13 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingHorizontal: 24,
-    paddingTop: Platform.OS === 'android' ? 56 : 60,
-    paddingBottom: 32,
+    paddingTop: Platform.OS === 'android' ? 48 : 52,
+    paddingBottom: 20,
     alignItems: 'center',
   },
   backButton: {
     position: 'absolute',
-    top: Platform.OS === 'android' ? 44 : 48,
+    top: Platform.OS === 'android' ? 40 : 44,
     left: 24,
     width: 36,
     height: 36,
@@ -293,7 +292,7 @@ const styles = StyleSheet.create({
     zIndex: 10,
   },
   logoWrapper: {
-    marginBottom: 24,
+    marginBottom: 16,
   },
   logo: {
     width: 64,
@@ -308,15 +307,9 @@ const styles = StyleSheet.create({
     elevation: 6,
   },
   appName: {
-    fontSize: 30,
+    fontSize: 28,
     fontWeight: 'bold',
     color: '#1f2937',
-    marginBottom: 8,
-  },
-  tagline: {
-    fontSize: 15,
-    color: '#6b7280',
-    fontWeight: '500',
   },
   formCard: {
     marginHorizontal: 24,
