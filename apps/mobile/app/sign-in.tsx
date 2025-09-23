@@ -81,36 +81,36 @@ export default function SignInScreen() {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
+          {/* Header */}
           <LinearGradient
             colors={['#FFE4E1', '#FFF5EE', '#E6F3FF']}
-            style={styles.hero}
+            style={styles.header}
           >
-            <View style={styles.heroHeader}>
-              <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-                <Ionicons name="arrow-back" size={22} color="#4A2C83" />
-              </TouchableOpacity>
-            </View>
-            <View style={styles.heroIconWrapper}>
+            <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+              <Ionicons name="arrow-back" size={20} color="#666" />
+            </TouchableOpacity>
+            <View style={styles.logoWrapper}>
               <LinearGradient
                 colors={['#FF8C42', '#FFB366']}
-                style={styles.heroIcon}
+                style={styles.logo}
               >
-                <Ionicons name="cut-outline" size={24} color="white" />
+                <Ionicons name="cut-outline" size={26} color="white" />
               </LinearGradient>
             </View>
-            <Text style={styles.heroTitle}>Hairfluencer</Text>
-            <Text style={styles.heroSubtitle}>Welcome back to your beauty journey</Text>
+            <Text style={styles.appName}>Hairfluencer</Text>
+            <Text style={styles.tagline}>Welcome back to your beauty journey</Text>
           </LinearGradient>
 
-          <View style={styles.card}>
-            <Text style={styles.cardTitle}>Sign In</Text>
+          {/* Login Form Card */}
+          <View style={styles.formCard}>
+            <Text style={styles.formTitle}>Sign In</Text>
 
-            <View style={styles.fieldGroup}>
-              <Text style={styles.fieldLabel}>Email</Text>
-              <View style={styles.fieldInputWrapper}>
-                <Ionicons name="mail" size={18} color="#9ca3af" />
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Email</Text>
+              <View style={styles.inputContainer}>
+                <Ionicons name="mail-outline" size={18} color="#9ca3af" style={styles.inputIcon} />
                 <TextInput
-                  style={styles.fieldInput}
+                  style={styles.input}
                   placeholder="Enter your email"
                   placeholderTextColor="#9ca3af"
                   keyboardType="email-address"
@@ -122,12 +122,12 @@ export default function SignInScreen() {
               </View>
             </View>
 
-            <View style={styles.fieldGroup}>
-              <Text style={styles.fieldLabel}>Password</Text>
-              <View style={styles.fieldInputWrapper}>
-                <Ionicons name="lock-closed" size={18} color="#9ca3af" />
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Password</Text>
+              <View style={styles.inputContainer}>
+                <Ionicons name="lock-closed-outline" size={18} color="#9ca3af" style={styles.inputIcon} />
                 <TextInput
-                  style={styles.fieldInput}
+                  style={styles.input}
                   placeholder="Enter your password"
                   placeholderTextColor="#9ca3af"
                   secureTextEntry={!isPasswordVisible}
@@ -137,10 +137,10 @@ export default function SignInScreen() {
                 <TouchableOpacity
                   accessibilityLabel={isPasswordVisible ? 'Hide password' : 'Show password'}
                   onPress={handleTogglePasswordVisibility}
-                  style={styles.toggleButton}
+                  style={styles.eyeButton}
                 >
                   <Ionicons
-                    name={isPasswordVisible ? 'eye-off' : 'eye'}
+                    name={isPasswordVisible ? 'eye-off-outline' : 'eye-outline'}
                     size={18}
                     color="#9ca3af"
                   />
@@ -153,19 +153,19 @@ export default function SignInScreen() {
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={[styles.primaryButton, disableSubmit && styles.primaryButtonDisabled]}
+              style={[styles.signInButton, disableSubmit && styles.signInButtonDisabled]}
               activeOpacity={0.9}
               onPress={handleSubmit}
               disabled={disableSubmit}
             >
               <LinearGradient
-                colors={['#FF8C42', '#FFB366']}
-                style={styles.primaryButtonGradient}
+                colors={disableSubmit ? ['#d1d5db', '#e5e7eb'] : ['#FF8C42', '#FFB366']}
+                style={styles.signInButtonGradient}
               >
                 {isSubmitting ? (
                   <ActivityIndicator color="white" />
                 ) : (
-                  <Text style={styles.primaryButtonText}>Sign In</Text>
+                  <Text style={styles.signInButtonText}>Sign In</Text>
                 )}
               </LinearGradient>
             </TouchableOpacity>
@@ -178,35 +178,35 @@ export default function SignInScreen() {
 
             <View style={styles.socialButtons}>
               <TouchableOpacity
-                style={styles.socialButton}
+                style={styles.googleButton}
                 onPress={handleGoogleSignIn}
                 activeOpacity={0.85}
               >
-                <Ionicons name="logo-google" size={18} color="#ea4335" />
-                <Text style={styles.socialButtonText}>Continue with Google</Text>
+                <Ionicons name="logo-google" size={20} color="#ea4335" />
+                <Text style={styles.googleButtonText}>Continue with Google</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={[styles.socialButton, styles.appleButton]}
+                style={styles.appleButton}
                 onPress={handleAppleSignIn}
                 activeOpacity={0.85}
               >
-                <Ionicons name="logo-apple" size={20} color="#ffffff" />
-                <Text style={[styles.socialButtonText, styles.appleButtonText]}>
-                  Continue with Apple
-                </Text>
+                <Ionicons name="logo-apple" size={20} color="white" />
+                <Text style={styles.appleButtonText}>Continue with Apple</Text>
               </TouchableOpacity>
             </View>
 
-            <TouchableOpacity
-              style={styles.secondaryAction}
-              onPress={() => router.push('/sign-up')}
-            >
-              <Text style={styles.secondaryActionText}>
+            <View style={styles.signUpLink}>
+              <Text style={styles.signUpText}>
                 Don't have an account?{' '}
-                <Text style={styles.secondaryActionHighlight}>Sign Up</Text>
+                <Text
+                  style={styles.signUpHighlight}
+                  onPress={() => router.push('/sign-up')}
+                >
+                  Sign Up
+                </Text>
               </Text>
-            </TouchableOpacity>
+            </View>
           </View>
         </ScrollView>
 
@@ -224,155 +224,144 @@ export default function SignInScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFE4E1',
   },
   background: {
     flex: 1,
-    paddingTop: Platform.OS === 'android' ? 36 : 16,
   },
   scrollContent: {
-    paddingBottom: 32,
+    flexGrow: 1,
   },
-  hero: {
-    marginHorizontal: 24,
-    borderRadius: 28,
+  header: {
     paddingHorizontal: 24,
-    paddingTop: 24,
+    paddingTop: Platform.OS === 'android' ? 56 : 60,
     paddingBottom: 32,
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 4,
-  },
-  heroHeader: {
-    alignSelf: 'flex-start',
-    marginBottom: 16,
   },
   backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.7)',
+    position: 'absolute',
+    top: Platform.OS === 'android' ? 44 : 48,
+    left: 24,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 6,
-    elevation: 3,
+    zIndex: 10,
   },
-  heroIconWrapper: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
-    backgroundColor: 'rgba(255, 255, 255, 0.6)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 16,
+  logoWrapper: {
+    marginBottom: 24,
   },
-  heroIcon: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
+  logo: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
+    shadowOpacity: 0.15,
     shadowRadius: 8,
-    elevation: 4,
+    elevation: 6,
   },
-  heroTitle: {
-    fontSize: 28,
-    fontWeight: '700',
+  appName: {
+    fontSize: 30,
+    fontWeight: 'bold',
     color: '#1f2937',
+    marginBottom: 8,
   },
-  heroSubtitle: {
-    marginTop: 8,
-    fontSize: 14,
-    color: '#4b5563',
+  tagline: {
+    fontSize: 15,
+    color: '#6b7280',
     fontWeight: '500',
   },
-  card: {
-    marginTop: 24,
+  formCard: {
     marginHorizontal: 24,
-    backgroundColor: '#ffffff',
-    borderRadius: 28,
-    paddingHorizontal: 24,
-    paddingTop: 32,
-    paddingBottom: 28,
+    marginTop: 8,
+    backgroundColor: 'white',
+    borderRadius: 24,
+    padding: 32,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.12,
     shadowRadius: 16,
-    elevation: 6,
-    gap: 20,
+    elevation: 8,
   },
-  cardTitle: {
+  formTitle: {
     fontSize: 24,
     fontWeight: '600',
     textAlign: 'center',
     color: '#1f2937',
+    marginBottom: 32,
   },
-  fieldGroup: {
-    gap: 8,
+  inputGroup: {
+    marginBottom: 24,
   },
-  fieldLabel: {
+  label: {
     fontSize: 14,
-    fontWeight: '500',
-    color: '#4b5563',
+    fontWeight: '600',
+    color: '#374151',
+    marginBottom: 8,
   },
-  fieldInputWrapper: {
+  inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
     backgroundColor: '#f9fafb',
-    borderRadius: 16,
+    borderRadius: 12,
     borderWidth: 1,
     borderColor: '#e5e7eb',
-    paddingHorizontal: 16,
     height: 56,
+    paddingHorizontal: 16,
   },
-  fieldInput: {
+  inputIcon: {
+    marginRight: 12,
+  },
+  input: {
     flex: 1,
     fontSize: 16,
     color: '#111827',
   },
-  toggleButton: {
-    padding: 4,
+  eyeButton: {
+    padding: 8,
+    marginLeft: 8,
   },
   forgotPassword: {
     alignSelf: 'flex-end',
+    marginBottom: 32,
+    marginTop: -12,
   },
   forgotPasswordText: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '600',
     color: '#FF8C42',
   },
-  primaryButton: {
-    borderRadius: 18,
+  signInButton: {
+    borderRadius: 12,
     overflow: 'hidden',
+    marginBottom: 24,
+    shadowColor: '#FF8C42',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 5,
   },
-  primaryButtonDisabled: {
-    opacity: 0.6,
+  signInButtonDisabled: {
+    shadowOpacity: 0.1,
   },
-  primaryButtonGradient: {
+  signInButtonGradient: {
     paddingVertical: 16,
-    borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  primaryButtonText: {
+  signInButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#ffffff',
+    color: 'white',
   },
   divider: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    marginBottom: 24,
   },
   dividerLine: {
     flex: 1,
@@ -380,49 +369,62 @@ const styles = StyleSheet.create({
     backgroundColor: '#e5e7eb',
   },
   dividerText: {
-    fontSize: 12,
-    color: '#6b7280',
+    paddingHorizontal: 16,
+    fontSize: 14,
+    color: '#9ca3af',
   },
   socialButtons: {
-    gap: 12,
+    marginBottom: 32,
   },
-  socialButton: {
+  googleButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 10,
-    paddingVertical: 14,
-    borderRadius: 16,
-    borderWidth: 1,
+    backgroundColor: 'white',
+    borderWidth: 2,
     borderColor: '#e5e7eb',
-    backgroundColor: '#ffffff',
+    borderRadius: 12,
+    paddingVertical: 16,
+    marginBottom: 16,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
-    shadowRadius: 6,
+    shadowRadius: 4,
     elevation: 2,
   },
-  socialButtonText: {
-    fontSize: 15,
+  googleButtonText: {
+    fontSize: 16,
     fontWeight: '600',
     color: '#374151',
+    marginLeft: 12,
   },
   appleButton: {
-    backgroundColor: '#000000',
-    borderColor: '#000000',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#000',
+    borderRadius: 12,
+    paddingVertical: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
   },
   appleButtonText: {
-    color: '#ffffff',
+    fontSize: 16,
+    fontWeight: '600',
+    color: 'white',
+    marginLeft: 12,
   },
-  secondaryAction: {
-    alignSelf: 'center',
-    marginTop: 8,
+  signUpLink: {
+    alignItems: 'center',
   },
-  secondaryActionText: {
-    fontSize: 14,
-    color: '#4b5563',
+  signUpText: {
+    fontSize: 15,
+    color: '#6b7280',
   },
-  secondaryActionHighlight: {
+  signUpHighlight: {
     color: '#FF8C42',
     fontWeight: '600',
   },
