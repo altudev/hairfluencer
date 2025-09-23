@@ -31,7 +31,7 @@ export function useAnonymousAuth(options: UseAnonymousAuthOptions = {}) {
       attemptedSignInRef.current = false;
       console.error('Anonymous sign-in failed', error);
 
-      const errorMessage = error instanceof Error ? error : new Error('Unable to start your session. Please check your connection and try again.');
+      const errorMessage = error instanceof Error ? error : new Error('Unable to initialize session. Please try again.');
       showErrorAlert(errorMessage);
       onError?.(errorMessage);
 
