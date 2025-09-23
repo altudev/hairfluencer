@@ -25,10 +25,27 @@ if (!googleEnabled) {
 }
 
 const defaultFrontendOrigin = process.env.FRONTEND_URL ?? 'http://localhost:3000';
-const mobileScheme = process.env.MOBILE_DEEP_LINK_SCHEME ?? 'hairfluencer';
+const rawMobileScheme = process.env.MOBILE_DEEP_LINK_SCHEME?.trim();
+const mobileScheme = rawMobileScheme && rawMobileScheme.length > 0 ? rawMobileScheme : 'hairfluencer';
 const expoDevClient = process.env.EXPO_DEV_CLIENT_URL;
 
 const trustedOriginsSet = new Set<string>();
+
+const normalizeMobileScheme = (scheme: string): string => {
+  const trimmed = scheme.trim();
+
+  if (!trimmed) {
+    throw new Error('MOBILE_DEEP_LINK_SCHEME must not be empty when provided');
+  }
+
+  const candidate = trimmed.replace('://', '');
+
+  if (!/^[a-z][a-z0-9+.-]*$/i.test(candidate)) {
+    throw new Error(`Invalid deep link scheme: ${scheme}`);
+  }
+
+  return trimmed.includes('://') ? trimmed : `${trimmed}://`;
+};
 
 const registerOrigin = (origin?: string | null) => {
   if (!origin) return;
@@ -39,7 +56,7 @@ const registerOrigin = (origin?: string | null) => {
 
 registerOrigin(defaultFrontendOrigin);
 registerOrigin(expoDevClient);
-registerOrigin(mobileScheme.includes('://') ? mobileScheme : `${mobileScheme}://`);
+registerOrigin(normalizeMobileScheme(mobileScheme));
 
 const configuredOrigins = process.env.BETTER_AUTH_TRUSTED_ORIGINS
   ?.split(',')
