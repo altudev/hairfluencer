@@ -4,12 +4,11 @@ import * as SecureStore from "expo-secure-store";
 
 const baseURL =
   process.env.EXPO_PUBLIC_API_URL ??
-  process.env.API_URL ??
   (process.env.NODE_ENV === 'development' ? 'http://localhost:3001' : undefined);
 
 if (!baseURL) {
   throw new Error(
-    "Missing API base URL. Set EXPO_PUBLIC_API_URL (preferred) or API_URL in the mobile environment."
+    "Missing API base URL. Set EXPO_PUBLIC_API_URL in the mobile environment."
   );
 }
 

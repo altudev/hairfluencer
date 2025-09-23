@@ -4,7 +4,6 @@
  */
 
 interface RequiredEnvVars {
-  API_URL?: string;
   EXPO_PUBLIC_API_URL?: string;
   FAL_API_KEY?: string;
   EXPO_PUBLIC_FAL_API_KEY?: string;
@@ -25,7 +24,6 @@ interface ValidationResult {
 
 const REQUIRED_VARS = {
   production: [
-    'API_URL',
     'EXPO_PUBLIC_API_URL',
     'FAL_API_KEY',
     'EXPO_PUBLIC_FAL_API_KEY',
@@ -37,7 +35,6 @@ const REQUIRED_VARS = {
     'EXPO_PUBLIC_TRUSTED_ORIGIN',
   ],
   staging: [
-    'API_URL',
     'FAL_API_KEY',
     'ADAPTY_PUBLIC_KEY',
     'EXPO_PUBLIC_API_URL',
@@ -47,7 +44,6 @@ const REQUIRED_VARS = {
     'EXPO_PUBLIC_TRUSTED_ORIGIN',
   ],
   development: [
-    'API_URL',
     'EXPO_PUBLIC_API_URL',
     'EXPO_PUBLIC_DEEP_LINK_SCHEME',
     'EXPO_PUBLIC_TRUSTED_ORIGIN',
@@ -83,7 +79,6 @@ export function validateEnvironmentVariables(): ValidationResult {
 
   // Validate API URL format if present
   const apiUrlCandidates: Array<{ key: keyof RequiredEnvVars; label: string }> = [
-    { key: 'API_URL', label: 'API_URL' },
     { key: 'EXPO_PUBLIC_API_URL', label: 'EXPO_PUBLIC_API_URL' },
   ];
 
@@ -98,13 +93,6 @@ export function validateEnvironmentVariables(): ValidationResult {
     }
   });
 
-  if (
-    process.env.API_URL &&
-    process.env.EXPO_PUBLIC_API_URL &&
-    process.env.API_URL !== process.env.EXPO_PUBLIC_API_URL
-  ) {
-    warnings.push('API_URL and EXPO_PUBLIC_API_URL do not match');
-  }
 
   const trustedOrigin = process.env.EXPO_PUBLIC_TRUSTED_ORIGIN;
   if (trustedOrigin && !trustedOrigin.includes('://')) {
