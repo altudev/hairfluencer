@@ -3,6 +3,8 @@ import { expoClient } from "@better-auth/expo/client";
 import { anonymousClient } from "better-auth/client/plugins";
 import * as SecureStore from "expo-secure-store";
 
+// NOTE: The default port for local development is set to 3001 (not 3000).
+// Make sure this is documented in environment setup guides, as it affects local development configuration.
 const baseURL =
   process.env.EXPO_PUBLIC_API_URL ??
   (process.env.NODE_ENV === 'development' ? 'http://localhost:3001' : undefined);
