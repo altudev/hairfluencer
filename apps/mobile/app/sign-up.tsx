@@ -13,6 +13,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/hooks/useAuth';
+import { VALIDATION } from '@/constants';
 import { showErrorAlert, showSuccessAlert } from '@/utils/errorHandler';
 
 export default function SignUpScreen() {
@@ -34,6 +35,13 @@ export default function SignUpScreen() {
   const handleSubmit = async () => {
     if (!name || !email || !password || !confirmPassword) {
       showErrorAlert(new Error('Please complete all fields to create your account.'));
+      return;
+    }
+
+    const minPasswordLength = VALIDATION.MIN_PASSWORD_LENGTH;
+
+    if (password.length < minPasswordLength) {
+      showErrorAlert(new Error(`Password must be at least ${minPasswordLength} characters.`));
       return;
     }
 
