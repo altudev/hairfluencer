@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
+  ActivityIndicator,
   Alert,
   Dimensions,
   FlatList,
@@ -57,6 +58,25 @@ export default function ProfileScreen() {
   const { recentTransformations, logout: storeLogout } = useStore();
   const [showSettings, setShowSettings] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [isLoadingTemplates, setIsLoadingTemplates] = useState(false);
+
+  // Simulate loading templates from API
+  useEffect(() => {
+    const loadTemplates = async () => {
+      setIsLoadingTemplates(true);
+      try {
+        // Simulate API delay
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        // In real app, fetch templates from API
+      } catch (error) {
+        console.error('Failed to load templates:', error);
+      } finally {
+        setIsLoadingTemplates(false);
+      }
+    };
+
+    loadTemplates();
+  }, []);
 
   const handleLogout = async () => {
     if (isLoggingOut) return;
@@ -209,7 +229,14 @@ export default function ProfileScreen() {
               </TouchableOpacity>
             </View>
 
-            <TemplateGrid templates={templates} onTemplatePress={handleTemplatePress} />
+            {isLoadingTemplates ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="large" color="#FF8C42" />
+                <Text style={styles.loadingText}>Loading templates...</Text>
+              </View>
+            ) : (
+              <TemplateGrid templates={templates} onTemplatePress={handleTemplatePress} />
+            )}
           </View>
 
           {/* Recent Transformations */}
@@ -413,5 +440,15 @@ const styles = StyleSheet.create({
   proBannerSubtitle: {
     fontSize: 14,
     color: 'rgba(255,255,255,0.9)',
+  },
+  loadingContainer: {
+    padding: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  loadingText: {
+    color: 'rgba(255,255,255,0.6)',
+    fontSize: 14,
+    marginTop: 12,
   },
 });
