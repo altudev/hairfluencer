@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import {
   Dimensions,
   FlatList,
-  Image,
   Platform,
   Pressable,
   SafeAreaView,
@@ -13,6 +12,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
 import { Ionicons, MaterialIcons, Feather } from '@expo/vector-icons';
@@ -108,7 +108,13 @@ export default function ProfileScreen() {
 
   const renderTemplate = ({ item }: { item: Template }) => (
     <TouchableOpacity style={styles.templateCard} activeOpacity={0.8}>
-      <Image source={{ uri: item.image }} style={styles.templateImage} />
+      <Image
+        source={{ uri: item.image }}
+        style={styles.templateImage}
+        contentFit="cover"
+        transition={200}
+        cachePolicy="memory-disk"
+      />
       <LinearGradient
         colors={['transparent', 'rgba(0,0,0,0.8)']}
         style={styles.templateGradient}
@@ -183,7 +189,13 @@ export default function ProfileScreen() {
 
               {/* Avatar and Info */}
               <TouchableOpacity style={styles.avatarContainer}>
-                <Image source={{ uri: avatarUrl }} style={styles.avatar} />
+                <Image
+                  source={{ uri: avatarUrl }}
+                  style={styles.avatar}
+                  contentFit="cover"
+                  transition={300}
+                  cachePolicy="memory-disk"
+                />
                 <View style={styles.avatarBadge}>
                   <Ionicons name="camera" size={14} color="white" />
                 </View>
@@ -236,6 +248,9 @@ export default function ProfileScreen() {
                     <Image
                       source={{ uri: item.transformedImage }}
                       style={styles.recentImage}
+                      contentFit="cover"
+                      transition={200}
+                      cachePolicy="memory-disk"
                     />
                   </TouchableOpacity>
                 ))}
