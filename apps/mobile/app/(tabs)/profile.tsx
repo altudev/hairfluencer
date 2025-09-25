@@ -79,21 +79,6 @@ export default function ProfileScreen() {
       <View style={styles.ellipse1} />
       <View style={styles.ellipse2} />
 
-      {/* Status Bar */}
-      <View style={styles.statusBar}>
-        <View style={styles.statusBarContent}>
-          <Text style={styles.time}>9:41</Text>
-          <View style={styles.dynamicIsland} />
-          <View style={styles.statusIcons}>
-            <Ionicons name="cellular" size={17} color="white" />
-            <Ionicons name="wifi" size={17} color="white" />
-            <View style={styles.battery}>
-              <Text style={styles.batteryText}>78</Text>
-            </View>
-          </View>
-        </View>
-      </View>
-
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerLeft} />
@@ -221,56 +206,13 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(106, 90, 224, 0.2)',
     transform: [{ scaleX: 1.2 }],
   },
-  statusBar: {
-    height: 59,
-    paddingTop: Platform.OS === 'ios' ? 0 : StatusBar.currentHeight,
-  },
-  statusBarContent: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 45,
-  },
-  time: {
-    color: 'white',
-    fontSize: 17,
-    fontWeight: 'bold',
-    width: 54,
-  },
-  dynamicIsland: {
-    width: 125,
-    height: 37,
-    backgroundColor: 'black',
-    borderRadius: 18,
-  },
-  statusIcons: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 7,
-  },
-  battery: {
-    width: 27,
-    height: 14,
-    borderWidth: 1,
-    borderColor: 'white',
-    borderRadius: 3,
-    paddingHorizontal: 2,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  batteryText: {
-    color: 'white',
-    fontSize: 10,
-    fontWeight: 'bold',
-  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     height: 48,
-    marginTop: 18,
+    marginTop: Platform.OS === 'ios' ? 60 : StatusBar.currentHeight ? StatusBar.currentHeight + 20 : 40,
   },
   headerLeft: {
     width: 48,
