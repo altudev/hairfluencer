@@ -18,10 +18,21 @@ interface AuthHookResult {
   signIn: typeof authClient.signIn;
   signUp: typeof authClient.signUp;
   signOut: typeof authClient.signOut;
+  logout: () => Promise<void>;
 }
 
 export function useAuth(): AuthHookResult {
   const sessionState = authClient.useSession();
+
+  const logout = async () => {
+    try {
+      await authClient.signOut();
+      await sessionState.refetch();
+    } catch (error) {
+      console.error('Logout failed:', error);
+      throw error;
+    }
+  };
 
   return useMemo(() => {
     const data = sessionState.data ?? null;
@@ -36,6 +47,7 @@ export function useAuth(): AuthHookResult {
       signIn: authClient.signIn,
       signUp: authClient.signUp,
       signOut: authClient.signOut,
+      logout,
     };
   }, [sessionState.data, sessionState.error, sessionState.isPending, sessionState.refetch]);
 }
