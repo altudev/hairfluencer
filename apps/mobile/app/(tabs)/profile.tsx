@@ -8,13 +8,15 @@ import {
   Dimensions,
   StatusBar,
   Platform,
+  SafeAreaView,
 } from 'react-native';
 import { Image } from 'expo-image';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/hooks/useAuth';
+import Constants from 'expo-constants';
 
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = (width - 48) / 2 - 8;
@@ -51,14 +53,13 @@ export default function ProfileScreen() {
   const handleTemplatePress = (template: Template) => {
     // Navigate to try-on with template
     router.push({
-      pathname: '/(tabs)',
+      pathname: '/upload',
       params: { templateId: template.id }
     });
   };
 
   const handleSettingsPress = () => {
-    // Handle settings press
-    console.log('Settings pressed');
+    router.push('/privacy-settings');
   };
 
   const handleHistoryPress = () => {
@@ -72,235 +73,291 @@ export default function ProfileScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="light-content" />
+    <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="dark-content" />
 
-      {/* Background ellipses */}
-      <View style={styles.ellipse1} />
-      <View style={styles.ellipse2} />
-
-      {/* Header */}
-      <View style={styles.header}>
-        <View style={styles.headerLeft} />
-        <Text style={styles.headerTitle}>Profile</Text>
-        <TouchableOpacity
-          style={styles.settingsButton}
-          onPress={handleSettingsPress}
-        >
-          <Ionicons name="settings-outline" size={24} color="white" />
-        </TouchableOpacity>
-      </View>
-
-      {/* Profile Card */}
-      <View style={styles.profileCard}>
-        <BlurView intensity={20} tint="dark" style={styles.profileCardInner}>
-          {/* Avatar */}
-          <View style={styles.avatarContainer}>
-            <Image
-              source={require('@/assets/icon.png')}
-              style={styles.avatar}
-              contentFit="cover"
-            />
-          </View>
-
-          {/* User Info */}
-          <View style={styles.userInfo}>
-            <Text style={styles.userName}>{userName}</Text>
-            <Text style={styles.userEmail}>{userEmail}</Text>
-          </View>
-
-          {/* History Button */}
-          <TouchableOpacity
-            style={styles.historyButton}
-            onPress={handleHistoryPress}
-          >
-            <Ionicons name="time-outline" size={20} color="white" />
-          </TouchableOpacity>
-
-          {/* Edit Button */}
-          <TouchableOpacity
-            style={styles.editButton}
-            onPress={handleEditPress}
-          >
-            <Ionicons name="pencil" size={20} color="white" />
-          </TouchableOpacity>
-        </BlurView>
-      </View>
-
-      {/* Templates Section */}
-      <ScrollView
-        style={styles.scrollView}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
+      <LinearGradient
+        colors={['#FFE4E1', '#FFFFFF', '#E6F3FF']}
+        style={styles.backgroundGradient}
       >
-        <View style={styles.templatesSection}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Templates</Text>
-            <TouchableOpacity>
-              <Text style={styles.seeAllText}>See All</Text>
-            </TouchableOpacity>
-          </View>
-
-          {/* Templates Grid */}
-          <View style={styles.templatesGrid}>
-            {templates.map((template, index) => (
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.scrollContent}
+        >
+          {/* Header */}
+          <LinearGradient
+            colors={['#FFF0F5', '#FFF5EE', '#F0F8FF']}
+            style={styles.header}
+          >
+            <View style={styles.headerContent}>
+              <TouchableOpacity style={styles.backButton}>
+                {/* Empty for symmetry */}
+              </TouchableOpacity>
+              <Text style={styles.headerTitle}>Profile</Text>
               <TouchableOpacity
-                key={template.id}
-                style={styles.templateCard}
-                activeOpacity={0.8}
-                onPress={() => handleTemplatePress(template)}
+                style={styles.settingsButton}
+                onPress={handleSettingsPress}
               >
-                <Image
-                  source={template.image}
-                  style={styles.templateImage}
-                  contentFit="cover"
-                />
+                <Ionicons name="settings-outline" size={22} color="#666" />
+              </TouchableOpacity>
+            </View>
+          </LinearGradient>
+
+          {/* Profile Card */}
+          <View style={styles.profileCard}>
+            {/* Avatar */}
+            <View style={styles.avatarContainer}>
+              <Image
+                source={require('@/assets/icon.png')}
+                style={styles.avatar}
+                contentFit="cover"
+              />
+              <TouchableOpacity style={styles.avatarEditButton} onPress={handleEditPress}>
                 <LinearGradient
-                  colors={['transparent', 'rgba(0,0,0,0.8)']}
-                  style={styles.templateGradient}
+                  colors={['#FF8C42', '#FFB366']}
+                  style={styles.avatarEditGradient}
                 >
-                  <TouchableOpacity
-                    style={[
-                      styles.tryButton,
-                      template.isPro && styles.tryButtonPro
-                    ]}
-                  >
-                    {template.isPro && (
-                      <Ionicons name="star" size={18} color="white" style={styles.proIcon} />
-                    )}
-                    <Ionicons name="play-circle-outline" size={18} color="white" />
-                    <Text style={styles.tryText}>Try</Text>
-                  </TouchableOpacity>
+                  <Ionicons name="camera" size={14} color="white" />
                 </LinearGradient>
               </TouchableOpacity>
-            ))}
+            </View>
+
+            {/* User Info */}
+            <View style={styles.userInfo}>
+              <Text style={styles.userName}>{userName}</Text>
+              <Text style={styles.userEmail}>{userEmail}</Text>
+            </View>
+
+            {/* Action Buttons */}
+            <View style={styles.actionButtons}>
+              <TouchableOpacity
+                style={styles.actionButton}
+                onPress={handleHistoryPress}
+              >
+                <View style={styles.actionIconContainer}>
+                  <Ionicons name="time-outline" size={20} color="#FF8C42" />
+                </View>
+                <Text style={styles.actionButtonText}>History</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.actionButton}
+                onPress={handleEditPress}
+              >
+                <View style={styles.actionIconContainer}>
+                  <Ionicons name="person-outline" size={20} color="#FF8C42" />
+                </View>
+                <Text style={styles.actionButtonText}>Edit Profile</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.actionButton}
+                onPress={() => router.push('/favorites')}
+              >
+                <View style={styles.actionIconContainer}>
+                  <Ionicons name="heart-outline" size={20} color="#FF8C42" />
+                </View>
+                <Text style={styles.actionButtonText}>Favorites</Text>
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
-      </ScrollView>
-    </View>
+
+          {/* Templates Section */}
+          <View style={styles.templatesSection}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>My Templates</Text>
+              <TouchableOpacity>
+                <Text style={styles.seeAllText}>See All</Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Templates Grid */}
+            <View style={styles.templatesGrid}>
+              {templates.map((template) => (
+                <TouchableOpacity
+                  key={template.id}
+                  style={styles.templateCard}
+                  activeOpacity={0.8}
+                  onPress={() => handleTemplatePress(template)}
+                >
+                  <Image
+                    source={template.image}
+                    style={styles.templateImage}
+                    contentFit="cover"
+                  />
+                  <LinearGradient
+                    colors={['transparent', 'rgba(0,0,0,0.7)']}
+                    style={styles.templateGradient}
+                  >
+                    <View style={styles.tryButton}>
+                      {template.isPro && (
+                        <MaterialIcons name="star" size={16} color="#FFB366" />
+                      )}
+                      <Text style={styles.tryText}>Try Now</Text>
+                    </View>
+                  </LinearGradient>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+
+          {/* Pro Banner */}
+          <TouchableOpacity activeOpacity={0.9} style={styles.proBannerContainer}>
+            <LinearGradient
+              colors={['#FF8C42', '#FFB366']}
+              style={styles.proBanner}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+            >
+              <MaterialIcons name="star" size={28} color="white" />
+              <View style={styles.proBannerText}>
+                <Text style={styles.proBannerTitle}>Upgrade to Pro</Text>
+                <Text style={styles.proBannerSubtitle}>
+                  Unlock all templates & features
+                </Text>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color="white" />
+            </LinearGradient>
+          </TouchableOpacity>
+
+          {/* Footer */}
+          <View style={styles.footer}>
+            <Text style={styles.footerText}>
+              ✨ Transform your look with AI-powered styling
+            </Text>
+          </View>
+        </ScrollView>
+      </LinearGradient>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#00020a',
+    paddingTop: Platform.OS === 'android' ? Constants.statusBarHeight : 0,
   },
-  ellipse1: {
-    position: 'absolute',
-    top: -87,
-    left: -169,
-    width: 417,
-    height: 363,
-    borderRadius: 200,
-    backgroundColor: 'rgba(106, 90, 224, 0.3)',
-    transform: [{ scaleX: 1.2 }],
-  },
-  ellipse2: {
-    position: 'absolute',
-    bottom: -100,
-    right: -100,
-    width: 304,
-    height: 325,
-    borderRadius: 200,
-    backgroundColor: 'rgba(106, 90, 224, 0.2)',
-    transform: [{ scaleX: 1.2 }],
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    height: 48,
-    marginTop: Platform.OS === 'ios' ? 60 : StatusBar.currentHeight ? StatusBar.currentHeight + 20 : 40,
-  },
-  headerLeft: {
-    width: 48,
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: 'white',
-  },
-  settingsButton: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: 'rgba(255, 255, 255, 0.16)',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  profileCard: {
-    marginHorizontal: 16,
-    marginTop: 22,
-    marginBottom: 22,
-  },
-  profileCardInner: {
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.05)',
-    padding: 32,
-    position: 'relative',
-  },
-  avatarContainer: {
-    width: 76,
-    height: 76,
-    borderRadius: 38,
-    backgroundColor: '#DFE2E6',
-    borderWidth: 1.9,
-    borderColor: '#F5F6F7',
-    overflow: 'hidden',
-  },
-  avatar: {
-    width: '100%',
-    height: '100%',
-  },
-  userInfo: {
-    marginTop: 12,
-  },
-  userName: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: 'white',
-  },
-  userEmail: {
-    fontSize: 15,
-    color: 'rgba(255, 255, 255, 0.6)',
-    marginTop: 2,
-  },
-  historyButton: {
-    position: 'absolute',
-    top: 20,
-    right: 20,
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.05)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  editButton: {
-    position: 'absolute',
-    bottom: 32,
-    right: 32,
-    width: 20,
-    height: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  scrollView: {
+  backgroundGradient: {
     flex: 1,
   },
   scrollContent: {
     paddingBottom: 100,
   },
+  header: {
+    paddingHorizontal: 16,
+    paddingTop: Platform.OS === 'android' ? 20 : 10,
+    paddingBottom: 20,
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  headerContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  settingsButton: {
+    width: 40,
+    height: 40,
+    backgroundColor: 'white',
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  profileCard: {
+    backgroundColor: 'white',
+    borderRadius: 20,
+    padding: 24,
+    margin: 16,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 5,
+  },
+  avatarContainer: {
+    position: 'relative',
+    marginBottom: 16,
+  },
+  avatar: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    borderWidth: 3,
+    borderColor: '#FFE4E1',
+  },
+  avatarEditButton: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+  },
+  avatarEditGradient: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: 'white',
+  },
+  userInfo: {
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  userName: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 4,
+  },
+  userEmail: {
+    fontSize: 14,
+    color: '#666',
+  },
+  actionButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    width: '100%',
+  },
+  actionButton: {
+    alignItems: 'center',
+    padding: 8,
+  },
+  actionIconContainer: {
+    width: 48,
+    height: 48,
+    backgroundColor: '#FFF5F0',
+    borderRadius: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  actionButtonText: {
+    fontSize: 12,
+    color: '#666',
+  },
   templatesSection: {
     paddingHorizontal: 16,
+    marginTop: 8,
   },
   sectionHeader: {
     flexDirection: 'row',
@@ -309,13 +366,14 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: 'white',
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#333',
   },
   seeAllText: {
     fontSize: 14,
-    color: 'rgba(255, 255, 255, 0.5)',
+    color: '#FF8C42',
+    fontWeight: '500',
   },
   templatesGrid: {
     flexDirection: 'row',
@@ -324,11 +382,16 @@ const styles = StyleSheet.create({
   },
   templateCard: {
     width: CARD_WIDTH,
-    height: CARD_WIDTH * 1.15,
-    borderRadius: 20,
+    height: CARD_WIDTH * 1.3,
+    borderRadius: 16,
     overflow: 'hidden',
     backgroundColor: 'white',
     marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 5,
   },
   templateImage: {
     width: '100%',
@@ -339,32 +402,58 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    height: '40%',
+    height: '50%',
     justifyContent: 'flex-end',
-    alignItems: 'center',
-    paddingBottom: 18,
+    paddingBottom: 12,
+    paddingHorizontal: 12,
   },
   tryButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.05)',
-    paddingHorizontal: 24,
-    paddingVertical: 8,
-    borderRadius: 100,
-    gap: 8,
-    backdropFilter: 'blur(34px)',
-  },
-  tryButtonPro: {
-    backgroundColor: 'rgba(61, 60, 65, 0.9)',
-  },
-  proIcon: {
-    marginRight: -4,
+    gap: 6,
   },
   tryText: {
     color: 'white',
     fontSize: 14,
     fontWeight: '600',
+  },
+  proBannerContainer: {
+    marginHorizontal: 16,
+    marginTop: 24,
+  },
+  proBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 20,
+    borderRadius: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  proBannerText: {
+    flex: 1,
+    marginLeft: 12,
+  },
+  proBannerTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: 'white',
+    marginBottom: 4,
+  },
+  proBannerSubtitle: {
+    fontSize: 14,
+    color: 'rgba(255, 255, 255, 0.9)',
+  },
+  footer: {
+    alignItems: 'center',
+    paddingVertical: 32,
+    paddingHorizontal: 16,
+  },
+  footerText: {
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
   },
 });
