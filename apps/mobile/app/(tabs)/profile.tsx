@@ -22,6 +22,7 @@ import Constants from 'expo-constants';
 import { useAuth } from '@/hooks/useAuth';
 import useStore from '@/stores/useStore';
 import { authClient } from '@/lib/auth-client';
+import SettingsMenu, { type MenuItem } from '@/components/profile/SettingsMenu';
 
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = (width - 48) / 2;
@@ -106,35 +107,35 @@ export default function ProfileScreen() {
     setShowSettings(!showSettings);
   };
 
-  const menuItems = [
+  const menuItems: MenuItem[] = [
     {
       id: 'history',
       label: 'History',
-      icon: 'time-outline' as const,
+      icon: 'time-outline',
       onPress: () => console.log('History'),
     },
     {
       id: 'edit',
       label: 'Edit Profile',
-      icon: 'create-outline' as const,
+      icon: 'create-outline',
       onPress: () => console.log('Edit Profile'),
     },
     {
       id: 'privacy',
       label: 'Privacy Settings',
-      icon: 'shield-checkmark-outline' as const,
+      icon: 'shield-checkmark-outline',
       onPress: () => router.push('/privacy-settings'),
     },
     {
       id: 'help',
       label: 'Help & Support',
-      icon: 'help-circle-outline' as const,
+      icon: 'help-circle-outline',
       onPress: () => console.log('Help'),
     },
     {
       id: 'logout',
       label: 'Sign Out',
-      icon: 'log-out-outline' as const,
+      icon: 'log-out-outline',
       onPress: handleLogout,
       isDestructive: true,
     },
@@ -193,33 +194,7 @@ export default function ProfileScreen() {
             <BlurView intensity={20} tint="dark" style={styles.profileCard}>
               {/* Settings Menu Dropdown */}
               {showSettings && (
-                <View style={styles.settingsMenu}>
-                  {menuItems.map((item, index) => (
-                    <TouchableOpacity
-                      key={item.id}
-                      style={[
-                        styles.menuItem,
-                        index === menuItems.length - 1 && styles.menuItemLast,
-                      ]}
-                      onPress={item.onPress}
-                      disabled={item.id === 'logout' && isLoggingOut}
-                    >
-                      <Ionicons
-                        name={item.icon}
-                        size={20}
-                        color={item.isDestructive ? '#FF6B6B' : '#fff'}
-                      />
-                      <Text
-                        style={[
-                          styles.menuItemText,
-                          item.isDestructive && styles.menuItemTextDestructive,
-                        ]}
-                      >
-                        {item.id === 'logout' && isLoggingOut ? 'Signing Out...' : item.label}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
+                <SettingsMenu menuItems={menuItems} isLoggingOut={isLoggingOut} />
               )}
 
               {/* Avatar and Info */}
@@ -384,43 +359,6 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255,255,255,0.1)',
     position: 'relative',
     overflow: 'visible',
-  },
-  settingsMenu: {
-    position: 'absolute',
-    top: -10,
-    right: 20,
-    backgroundColor: 'rgba(30,30,40,0.98)',
-    borderRadius: 12,
-    padding: 8,
-    minWidth: 180,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 10,
-    zIndex: 1000,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
-  },
-  menuItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.05)',
-  },
-  menuItemLast: {
-    borderBottomWidth: 0,
-  },
-  menuItemText: {
-    color: 'white',
-    fontSize: 15,
-    marginLeft: 12,
-    flex: 1,
-  },
-  menuItemTextDestructive: {
-    color: '#FF6B6B',
   },
   avatarContainer: {
     position: 'relative',
