@@ -138,3 +138,64 @@ ADAPTY_SECRET_KEY=your-adapty-secret-key
 - CORS configured for mobile app requests
 - Google OAuth redirect handling for mobile
 - Try-on API enforces URL validation, 32KB payload limit, 10 image URL cap, per-client rate/queue limits, Redis status/result caching, and fal.ai retry + circuit breaker handling
+
+## High-Level Architecture
+
+### Request Flow Pattern
+1. **Mobile App** → Makes API request with auth token (stored in Expo SecureStore)
+2. **API Server** → Validates session via Better Auth middleware
+3. **Service Layer** → `apps/api/src/services/*` handles business logic
+4. **External Services** → FAL.ai for AI, Redis for caching, PostgreSQL for persistence
+5. **Response** → JSON with standardized format: `{ data: {...}, meta: {...} }` or `{ error: string, message: string }`
+
+### AI Transformation Pipeline
+1. **Submit**: Mobile uploads image URLs → API validates → Queue job with FAL.ai
+2. **Poll**: Mobile polls `/api/v1/try-ons/:jobId` → API checks Redis cache → Query FAL.ai if miss
+3. **Complete**: Result cached 24h → Mobile displays transformation
+
+### Authentication Architecture
+- **Anonymous Sessions**: Auto-created on app launch, 7-day duration
+- **Session Flow**: JWT stored in SecureStore → Sent as Bearer token → Better Auth validates
+- **Cleanup Job**: `bun run cleanup:anonymous` removes 30-day old anonymous accounts
+
+### Database Schema Patterns
+- **Drizzle ORM**: Type-safe schema in `apps/api/src/db/schemas/`
+- **Migrations**: Generate with `db:generate`, apply with `db:migrate`
+- **Multilingual**: Hairstyle names/descriptions in `nameEn`/`nameEs` columns
+- **Timestamps**: All tables have `createdAt`/`updatedAt` with automatic updates
+
+### Rate Limiting & Resilience
+- **API Rate Limits**: 20 requests/minute per client, max 5 concurrent AI jobs
+- **Request Validation**: 32KB body limit, max 10 image URLs, URL host whitelisting
+- **Circuit Breaker**: 5 consecutive failures → 30s cooldown for FAL.ai
+- **Retry Logic**: Exponential backoff 500ms → 5000ms, max 3 attempts
+- **Caching**: Redis caches status (5s TTL) and results (24h TTL)
+
+### Mobile App Navigation (Expo Router)
+- **File-based routing**: `apps/mobile/app/` directory structure defines routes
+- **Tab Navigation**: `(tabs)/_layout.tsx` defines bottom tabs (Home, Explore)
+- **Modal Screens**: Sign-in/up presented as modals via `presentation: 'modal'`
+- **Deep Linking**: `hairfluencer://` scheme configured for OAuth callbacks
+
+### Error Handling Patterns
+- **API Errors**: Standardized format with error codes (e.g., `INVALID_REQUEST`, `RATE_LIMITED`)
+- **Mobile Errors**: `showErrorAlert()` utility displays user-friendly messages
+- **FAL.ai Errors**: Circuit breaker prevents cascade failures, returns 503 when unavailable
+- **Database Errors**: Connection pool with auto-retry, graceful degradation
+
+## Key Implementation Notes
+
+### Testing Locally
+1. Start PostgreSQL and Redis (optional)
+2. Run `bun install` at root
+3. Set up `.env` files in each app directory
+4. Run migrations: `cd apps/api && bun run db:migrate`
+5. Start all apps: `bun dev` (from root)
+6. Mobile app connects to API at `http://localhost:3001`
+
+### Common Development Patterns
+- **Adding new API endpoint**: Create route in `apps/api/src/routes/v1/`, add service logic in `apps/api/src/services/`
+- **Database changes**: Modify schema in `apps/api/src/db/schemas/`, run `db:generate` then `db:migrate`
+- **Mobile screen**: Add file in `apps/mobile/app/`, navigation handled automatically by Expo Router
+- **State management**: Use Zustand store in `apps/mobile/stores/useStore.ts`
+- **API calls from mobile**: Use auth client from `apps/mobile/lib/auth-client.ts`
