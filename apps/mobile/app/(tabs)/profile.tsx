@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import {
+  Alert,
   Dimensions,
   FlatList,
   Platform,
@@ -60,12 +61,45 @@ export default function ProfileScreen() {
   const { user, logout: authLogout } = useAuth();
   const { recentTransformations, logout: storeLogout } = useStore();
   const [showSettings, setShowSettings] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const handleLogout = async () => {
-    await authClient.signOut();
-    authLogout();
-    storeLogout();
-    router.replace('/sign-in');
+    if (isLoggingOut) return;
+
+    Alert.alert(
+      'Sign Out',
+      'Are you sure you want to sign out?',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Sign Out',
+          style: 'destructive',
+          onPress: async () => {
+            setIsLoggingOut(true);
+            try {
+              await authClient.signOut();
+              authLogout();
+              storeLogout();
+              router.replace('/sign-in');
+            } catch (error) {
+              console.error('Logout failed:', error);
+              Alert.alert(
+                'Sign Out Failed',
+                'Unable to sign out. Please try again.',
+                [{ text: 'OK' }]
+              );
+            } finally {
+              setIsLoggingOut(false);
+              setShowSettings(false);
+            }
+          },
+        },
+      ],
+      { cancelable: true }
+    );
   };
 
   const handleSettingsPress = () => {
@@ -168,6 +202,7 @@ export default function ProfileScreen() {
                         index === menuItems.length - 1 && styles.menuItemLast,
                       ]}
                       onPress={item.onPress}
+                      disabled={item.id === 'logout' && isLoggingOut}
                     >
                       <Ionicons
                         name={item.icon}
@@ -180,7 +215,7 @@ export default function ProfileScreen() {
                           item.isDestructive && styles.menuItemTextDestructive,
                         ]}
                       >
-                        {item.label}
+                        {item.id === 'logout' && isLoggingOut ? 'Signing Out...' : item.label}
                       </Text>
                     </TouchableOpacity>
                   ))}
