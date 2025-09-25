@@ -24,6 +24,7 @@ import useStore from '@/stores/useStore';
 import { authClient } from '@/lib/auth-client';
 import SettingsMenu, { type MenuItem } from '@/components/profile/SettingsMenu';
 import TemplateGrid, { type Template } from '@/components/profile/TemplateGrid';
+import StatsSection, { type StatItem } from '@/components/profile/StatsSection';
 
 const { width } = Dimensions.get('window');
 
@@ -143,6 +144,12 @@ export default function ProfileScreen() {
   const displayEmail = user?.email || 'guest@hairfluencer.app';
   const avatarUrl = user?.image || `https://ui-avatars.com/api/?name=${displayName}&background=6B46C1&color=fff`;
 
+  const stats: StatItem[] = [
+    { label: 'Styles Tried', value: recentTransformations.length },
+    { label: 'Favorites', value: useStore.getState().favorites.size },
+    { label: 'Shared', value: 0 },
+  ];
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" />
@@ -240,24 +247,7 @@ export default function ProfileScreen() {
           )}
 
           {/* Stats Section */}
-          <View style={styles.statsSection}>
-            <View style={styles.statCard}>
-              <Text style={styles.statNumber}>
-                {recentTransformations.length}
-              </Text>
-              <Text style={styles.statLabel}>Styles Tried</Text>
-            </View>
-            <View style={styles.statCard}>
-              <Text style={styles.statNumber}>
-                {useStore.getState().favorites.size}
-              </Text>
-              <Text style={styles.statLabel}>Favorites</Text>
-            </View>
-            <View style={styles.statCard}>
-              <Text style={styles.statNumber}>0</Text>
-              <Text style={styles.statLabel}>Shared</Text>
-            </View>
-          </View>
+          <StatsSection stats={stats} />
 
           {/* Pro Banner */}
           <TouchableOpacity activeOpacity={0.9}>
@@ -399,32 +389,6 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
     resizeMode: 'cover',
-  },
-  statsSection: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    paddingHorizontal: 20,
-    marginBottom: 30,
-  },
-  statCard: {
-    alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.05)',
-    borderRadius: 16,
-    padding: 16,
-    flex: 1,
-    marginHorizontal: 6,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
-  },
-  statNumber: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: 'white',
-    marginBottom: 4,
-  },
-  statLabel: {
-    fontSize: 12,
-    color: 'rgba(255,255,255,0.6)',
   },
   proBanner: {
     marginHorizontal: 20,
