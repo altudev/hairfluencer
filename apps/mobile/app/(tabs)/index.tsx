@@ -196,14 +196,17 @@ export default function HomeScreen() {
                 <TouchableOpacity style={styles.notificationButton}>
                   <Ionicons name="notifications-outline" size={22} color="#666" />
                 </TouchableOpacity>
-                <View style={styles.authChip}>
+                <TouchableOpacity
+                  style={styles.authChip}
+                  onPress={() => router.push('/(tabs)/profile')}
+                >
                   <Ionicons
                     name="person-circle-outline"
                     size={20}
                     color="#4A2C83"
                   />
                   <Text style={styles.authChipText}>{displayName}</Text>
-                </View>
+                </TouchableOpacity>
               </View>
             </View>
 
