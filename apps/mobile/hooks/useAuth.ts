@@ -1,5 +1,5 @@
 import type { BetterFetchError } from '@better-fetch/fetch';
-import { useMemo } from 'react';
+import { useMemo, useCallback } from 'react';
 import { authClient } from '@/lib/auth-client';
 
 type SessionHookResult = ReturnType<typeof authClient.useSession>;
@@ -24,7 +24,7 @@ interface AuthHookResult {
 export function useAuth(): AuthHookResult {
   const sessionState = authClient.useSession();
 
-  const logout = async () => {
+  const logout = useCallback(async () => {
     try {
       await authClient.signOut();
       await sessionState.refetch();
@@ -32,7 +32,7 @@ export function useAuth(): AuthHookResult {
       console.error('Logout failed:', error);
       throw error;
     }
-  };
+  }, [sessionState]);
 
   return useMemo(() => {
     const data = sessionState.data ?? null;
@@ -49,5 +49,5 @@ export function useAuth(): AuthHookResult {
       signOut: authClient.signOut,
       logout,
     };
-  }, [sessionState.data, sessionState.error, sessionState.isPending, sessionState.refetch]);
+  }, [sessionState.data, sessionState.error, sessionState.isPending, sessionState.refetch, logout]);
 }
