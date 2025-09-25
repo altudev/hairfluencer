@@ -31,6 +31,9 @@ export default function TemplateGrid({ templates, onTemplatePress }: TemplateGri
       style={styles.templateCard}
       activeOpacity={0.8}
       onPress={() => onTemplatePress?.(item)}
+      accessibilityLabel={`${item.title} template`}
+      accessibilityRole="button"
+      accessibilityHint="Tap to try this hairstyle"
     >
       <Image
         source={{ uri: item.image }}

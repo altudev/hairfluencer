@@ -188,6 +188,9 @@ export default function ProfileScreen() {
             <TouchableOpacity
               style={styles.settingsButton}
               onPress={handleSettingsPress}
+              accessibilityLabel="Settings"
+              accessibilityRole="button"
+              accessibilityHint="Opens settings menu"
             >
               <Ionicons name="settings-outline" size={24} color="white" />
             </TouchableOpacity>
@@ -202,13 +205,19 @@ export default function ProfileScreen() {
               )}
 
               {/* Avatar and Info */}
-              <TouchableOpacity style={styles.avatarContainer}>
+              <TouchableOpacity
+                style={styles.avatarContainer}
+                accessibilityLabel="Profile picture"
+                accessibilityRole="button"
+                accessibilityHint="Tap to change profile picture"
+              >
                 <Image
                   source={{ uri: avatarUrl }}
                   style={styles.avatar}
                   contentFit="cover"
                   transition={300}
                   cachePolicy="memory-disk"
+                  accessible={false}
                 />
                 <View style={styles.avatarBadge}>
                   <Ionicons name="camera" size={14} color="white" />
@@ -277,7 +286,12 @@ export default function ProfileScreen() {
           <StatsSection stats={stats} />
 
           {/* Pro Banner */}
-          <TouchableOpacity activeOpacity={0.9}>
+          <TouchableOpacity
+            activeOpacity={0.9}
+            accessibilityLabel="Upgrade to Pro"
+            accessibilityRole="button"
+            accessibilityHint="Tap to learn more about Pro features"
+          >
             <LinearGradient
               colors={['#FFB366', '#FF8C42']}
               style={styles.proBanner}
