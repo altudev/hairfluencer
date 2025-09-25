@@ -1,402 +1,364 @@
 import React, { useState, useEffect } from 'react';
 import {
-  ActivityIndicator,
-  Alert,
-  Dimensions,
-  Platform,
-  SafeAreaView,
   ScrollView,
-  StatusBar,
-  StyleSheet,
   Text,
-  TouchableOpacity,
   View,
+  TouchableOpacity,
+  StyleSheet,
+  Dimensions,
+  StatusBar,
+  Platform,
 } from 'react-native';
 import { Image } from 'expo-image';
+import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
-import { Ionicons, MaterialIcons, Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import Constants from 'expo-constants';
 import { useAuth } from '@/hooks/useAuth';
-import useStore from '@/stores/useStore';
-import { authClient } from '@/lib/auth-client';
-import SettingsMenu, { type MenuItem } from '@/components/profile/SettingsMenu';
-import TemplateGrid, { type Template } from '@/components/profile/TemplateGrid';
-import StatsSection, { type StatItem } from '@/components/profile/StatsSection';
 
 const { width } = Dimensions.get('window');
+const CARD_WIDTH = (width - 48) / 2 - 8;
 
+interface Template {
+  id: string;
+  image: any;
+  isPro?: boolean;
+}
+
+// Template images - using placeholder images
 const templates: Template[] = [
-  {
-    id: '1',
-    image: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400',
-    title: 'Neon Vibes',
-  },
-  {
-    id: '2',
-    image: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=400',
-    title: 'Blue Dreams',
-  },
-  {
-    id: '3',
-    image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400',
-    title: 'Street Style',
-  },
-  {
-    id: '4',
-    image: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=400',
-    title: 'Glamour',
-  },
+  { id: '1', image: require('@/assets/icon.png') },
+  { id: '2', image: require('@/assets/icon.png') },
+  { id: '3', image: require('@/assets/icon.png') },
+  { id: '4', image: require('@/assets/icon.png') },
+  { id: '5', image: require('@/assets/icon.png') },
+  { id: '6', image: require('@/assets/icon.png'), isPro: true },
 ];
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const { user, logout: authLogout } = useAuth();
-  const { recentTransformations, logout: storeLogout } = useStore();
-  const [showSettings, setShowSettings] = useState(false);
-  const [isLoggingOut, setIsLoggingOut] = useState(false);
-  const [isLoadingTemplates, setIsLoadingTemplates] = useState(false);
+  const { user } = useAuth();
+  const [userName, setUserName] = useState('Alex Warren');
+  const [userEmail, setUserEmail] = useState('kenzi.lawson@example.com');
 
-  // Simulate loading templates from API
   useEffect(() => {
-    const loadTemplates = async () => {
-      setIsLoadingTemplates(true);
-      try {
-        // Simulate API delay
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        // In real app, fetch templates from API
-      } catch (error) {
-        console.error('Failed to load templates:', error);
-      } finally {
-        setIsLoadingTemplates(false);
-      }
-    };
+    if (user) {
+      setUserName(user.name || user.email?.split('@')[0] || 'Alex Warren');
+      setUserEmail(user.email || 'kenzi.lawson@example.com');
+    }
+  }, [user]);
 
-    loadTemplates();
-  }, []);
-
-  const handleLogout = async () => {
-    if (isLoggingOut) return;
-
-    Alert.alert(
-      'Sign Out',
-      'Are you sure you want to sign out?',
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel',
-        },
-        {
-          text: 'Sign Out',
-          style: 'destructive',
-          onPress: async () => {
-            setIsLoggingOut(true);
-            try {
-              await authClient.signOut();
-              authLogout();
-              storeLogout();
-              router.replace('/sign-in');
-            } catch (error) {
-              console.error('Logout failed:', error);
-              Alert.alert(
-                'Sign Out Failed',
-                'Unable to sign out. Please try again.',
-                [{ text: 'OK' }]
-              );
-            } finally {
-              setIsLoggingOut(false);
-              setShowSettings(false);
-            }
-          },
-        },
-      ],
-      { cancelable: true }
-    );
+  const handleTemplatePress = (template: Template) => {
+    // Navigate to try-on with template
+    router.push({
+      pathname: '/(tabs)',
+      params: { templateId: template.id }
+    });
   };
 
   const handleSettingsPress = () => {
-    setShowSettings(!showSettings);
+    // Handle settings press
+    console.log('Settings pressed');
   };
 
-  const menuItems: MenuItem[] = [
-    {
-      id: 'history',
-      label: 'History',
-      icon: 'time-outline',
-      onPress: () => console.log('History'),
-    },
-    {
-      id: 'edit',
-      label: 'Edit Profile',
-      icon: 'create-outline',
-      onPress: () => console.log('Edit Profile'),
-    },
-    {
-      id: 'privacy',
-      label: 'Privacy Settings',
-      icon: 'shield-checkmark-outline',
-      onPress: () => router.push('/privacy-settings'),
-    },
-    {
-      id: 'help',
-      label: 'Help & Support',
-      icon: 'help-circle-outline',
-      onPress: () => console.log('Help'),
-    },
-    {
-      id: 'logout',
-      label: 'Sign Out',
-      icon: 'log-out-outline',
-      onPress: handleLogout,
-      isDestructive: true,
-    },
-  ];
-
-  const handleTemplatePress = (template: Template) => {
-    console.log('Template pressed:', template.title);
-    // TODO: Navigate to try-on screen with template
+  const handleHistoryPress = () => {
+    // Handle history press
+    console.log('History pressed');
   };
 
-  const displayName = user?.name || user?.email?.split('@')[0] || 'Guest User';
-  const displayEmail = user?.email || 'guest@hairfluencer.app';
-  const avatarUrl = user?.image || `https://ui-avatars.com/api/?name=${displayName}&background=6B46C1&color=fff`;
-
-  const stats: StatItem[] = [
-    { label: 'Styles Tried', value: recentTransformations.length },
-    { label: 'Favorites', value: useStore.getState().favorites.size },
-    { label: 'Shared', value: 0 },
-  ];
+  const handleEditPress = () => {
+    // Handle edit profile press
+    console.log('Edit profile pressed');
+  };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <StatusBar barStyle="light-content" />
 
-      <LinearGradient
-        colors={['#6B46C1', '#342671', '#1A1A2E']}
-        style={styles.backgroundGradient}
-      >
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.scrollContent}
+      {/* Background ellipses */}
+      <View style={styles.ellipse1} />
+      <View style={styles.ellipse2} />
+
+      {/* Status Bar */}
+      <View style={styles.statusBar}>
+        <View style={styles.statusBarContent}>
+          <Text style={styles.time}>9:41</Text>
+          <View style={styles.dynamicIsland} />
+          <View style={styles.statusIcons}>
+            <Ionicons name="cellular" size={17} color="white" />
+            <Ionicons name="wifi" size={17} color="white" />
+            <View style={styles.battery}>
+              <Text style={styles.batteryText}>78</Text>
+            </View>
+          </View>
+        </View>
+      </View>
+
+      {/* Header */}
+      <View style={styles.header}>
+        <View style={styles.headerLeft} />
+        <Text style={styles.headerTitle}>Profile</Text>
+        <TouchableOpacity
+          style={styles.settingsButton}
+          onPress={handleSettingsPress}
         >
-          {/* Header */}
-          <View style={styles.header}>
-            <Text style={styles.headerTitle}>Profile</Text>
-            <TouchableOpacity
-              style={styles.settingsButton}
-              onPress={handleSettingsPress}
-              accessibilityLabel="Settings"
-              accessibilityRole="button"
-              accessibilityHint="Opens settings menu"
-            >
-              <Ionicons name="settings-outline" size={24} color="white" />
+          <Ionicons name="settings-outline" size={24} color="white" />
+        </TouchableOpacity>
+      </View>
+
+      {/* Profile Card */}
+      <View style={styles.profileCard}>
+        <BlurView intensity={20} tint="dark" style={styles.profileCardInner}>
+          {/* Avatar */}
+          <View style={styles.avatarContainer}>
+            <Image
+              source={require('@/assets/icon.png')}
+              style={styles.avatar}
+              contentFit="cover"
+            />
+          </View>
+
+          {/* User Info */}
+          <View style={styles.userInfo}>
+            <Text style={styles.userName}>{userName}</Text>
+            <Text style={styles.userEmail}>{userEmail}</Text>
+          </View>
+
+          {/* History Button */}
+          <TouchableOpacity
+            style={styles.historyButton}
+            onPress={handleHistoryPress}
+          >
+            <Ionicons name="time-outline" size={20} color="white" />
+          </TouchableOpacity>
+
+          {/* Edit Button */}
+          <TouchableOpacity
+            style={styles.editButton}
+            onPress={handleEditPress}
+          >
+            <Ionicons name="pencil" size={20} color="white" />
+          </TouchableOpacity>
+        </BlurView>
+      </View>
+
+      {/* Templates Section */}
+      <ScrollView
+        style={styles.scrollView}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+      >
+        <View style={styles.templatesSection}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Templates</Text>
+            <TouchableOpacity>
+              <Text style={styles.seeAllText}>See All</Text>
             </TouchableOpacity>
           </View>
 
-          {/* Profile Card */}
-          <View style={styles.profileSection}>
-            <BlurView intensity={20} tint="dark" style={styles.profileCard}>
-              {/* Settings Menu Dropdown */}
-              {showSettings && (
-                <SettingsMenu menuItems={menuItems} isLoggingOut={isLoggingOut} />
-              )}
-
-              {/* Avatar and Info */}
+          {/* Templates Grid */}
+          <View style={styles.templatesGrid}>
+            {templates.map((template, index) => (
               <TouchableOpacity
-                style={styles.avatarContainer}
-                accessibilityLabel="Profile picture"
-                accessibilityRole="button"
-                accessibilityHint="Tap to change profile picture"
+                key={template.id}
+                style={styles.templateCard}
+                activeOpacity={0.8}
+                onPress={() => handleTemplatePress(template)}
               >
                 <Image
-                  source={{ uri: avatarUrl }}
-                  style={styles.avatar}
+                  source={template.image}
+                  style={styles.templateImage}
                   contentFit="cover"
-                  transition={300}
-                  cachePolicy="memory-disk"
-                  accessible={false}
                 />
-                <View style={styles.avatarBadge}>
-                  <Ionicons name="camera" size={14} color="white" />
-                </View>
-              </TouchableOpacity>
-
-              <Text style={styles.userName}>{displayName}</Text>
-              <Text style={styles.userEmail}>{displayEmail}</Text>
-            </BlurView>
-          </View>
-
-          {/* Templates Section */}
-          <View style={styles.templatesSection}>
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Templates</Text>
-              <TouchableOpacity>
-                <Text style={styles.seeAllText}>See All</Text>
-              </TouchableOpacity>
-            </View>
-
-            {isLoadingTemplates ? (
-              <View style={styles.loadingContainer}>
-                <ActivityIndicator size="large" color="#FF8C42" />
-                <Text style={styles.loadingText}>Loading templates...</Text>
-              </View>
-            ) : (
-              <TemplateGrid templates={templates} onTemplatePress={handleTemplatePress} />
-            )}
-          </View>
-
-          {/* Recent Transformations */}
-          {recentTransformations.length > 0 && (
-            <View style={styles.templatesSection}>
-              <View style={styles.sectionHeader}>
-                <Text style={styles.sectionTitle}>Recent</Text>
-                <TouchableOpacity>
-                  <Text style={styles.seeAllText}>See All</Text>
-                </TouchableOpacity>
-              </View>
-
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.recentScroll}
-              >
-                {recentTransformations.slice(0, 4).map((item) => (
+                <LinearGradient
+                  colors={['transparent', 'rgba(0,0,0,0.8)']}
+                  style={styles.templateGradient}
+                >
                   <TouchableOpacity
-                    key={item.id}
-                    style={styles.recentCard}
-                    activeOpacity={0.8}
+                    style={[
+                      styles.tryButton,
+                      template.isPro && styles.tryButtonPro
+                    ]}
                   >
-                    <Image
-                      source={{ uri: item.transformedImage }}
-                      style={styles.recentImage}
-                      contentFit="cover"
-                      transition={200}
-                      cachePolicy="memory-disk"
-                    />
+                    {template.isPro && (
+                      <Ionicons name="star" size={18} color="white" style={styles.proIcon} />
+                    )}
+                    <Ionicons name="play-circle-outline" size={18} color="white" />
+                    <Text style={styles.tryText}>Try</Text>
                   </TouchableOpacity>
-                ))}
-              </ScrollView>
-            </View>
-          )}
-
-          {/* Stats Section */}
-          <StatsSection stats={stats} />
-
-          {/* Pro Banner */}
-          <TouchableOpacity
-            activeOpacity={0.9}
-            accessibilityLabel="Upgrade to Pro"
-            accessibilityRole="button"
-            accessibilityHint="Tap to learn more about Pro features"
-          >
-            <LinearGradient
-              colors={['#FFB366', '#FF8C42']}
-              style={styles.proBanner}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-            >
-              <View style={styles.proBannerContent}>
-                <MaterialIcons name="star" size={24} color="white" />
-                <View style={styles.proBannerText}>
-                  <Text style={styles.proBannerTitle}>Upgrade to Pro</Text>
-                  <Text style={styles.proBannerSubtitle}>
-                    Unlock all styles & features
-                  </Text>
-                </View>
-                <Ionicons name="chevron-forward" size={20} color="white" />
-              </View>
-            </LinearGradient>
-          </TouchableOpacity>
-        </ScrollView>
-      </LinearGradient>
-    </SafeAreaView>
+                </LinearGradient>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#1A1A2E',
+    backgroundColor: '#00020a',
   },
-  backgroundGradient: {
+  ellipse1: {
+    position: 'absolute',
+    top: -87,
+    left: -169,
+    width: 417,
+    height: 363,
+    borderRadius: 200,
+    backgroundColor: 'rgba(106, 90, 224, 0.3)',
+    transform: [{ scaleX: 1.2 }],
+  },
+  ellipse2: {
+    position: 'absolute',
+    bottom: -100,
+    right: -100,
+    width: 304,
+    height: 325,
+    borderRadius: 200,
+    backgroundColor: 'rgba(106, 90, 224, 0.2)',
+    transform: [{ scaleX: 1.2 }],
+  },
+  statusBar: {
+    height: 59,
+    paddingTop: Platform.OS === 'ios' ? 0 : StatusBar.currentHeight,
+  },
+  statusBarContent: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 45,
+  },
+  time: {
+    color: 'white',
+    fontSize: 17,
+    fontWeight: 'bold',
+    width: 54,
+  },
+  dynamicIsland: {
+    width: 125,
+    height: 37,
+    backgroundColor: 'black',
+    borderRadius: 18,
+  },
+  statusIcons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 7,
+  },
+  battery: {
+    width: 27,
+    height: 14,
+    borderWidth: 1,
+    borderColor: 'white',
+    borderRadius: 3,
+    paddingHorizontal: 2,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  batteryText: {
+    color: 'white',
+    fontSize: 10,
+    fontWeight: 'bold',
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    height: 48,
+    marginTop: 18,
+  },
+  headerLeft: {
+    width: 48,
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: 'white',
+  },
+  settingsButton: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(255, 255, 255, 0.16)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  profileCard: {
+    marginHorizontal: 16,
+    marginTop: 22,
+    marginBottom: 22,
+  },
+  profileCardInner: {
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.05)',
+    padding: 32,
+    position: 'relative',
+  },
+  avatarContainer: {
+    width: 76,
+    height: 76,
+    borderRadius: 38,
+    backgroundColor: '#DFE2E6',
+    borderWidth: 1.9,
+    borderColor: '#F5F6F7',
+    overflow: 'hidden',
+  },
+  avatar: {
+    width: '100%',
+    height: '100%',
+  },
+  userInfo: {
+    marginTop: 12,
+  },
+  userName: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: 'white',
+  },
+  userEmail: {
+    fontSize: 15,
+    color: 'rgba(255, 255, 255, 0.6)',
+    marginTop: 2,
+  },
+  historyButton: {
+    position: 'absolute',
+    top: 20,
+    right: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.05)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  editButton: {
+    position: 'absolute',
+    bottom: 32,
+    right: 32,
+    width: 20,
+    height: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  scrollView: {
     flex: 1,
   },
   scrollContent: {
     paddingBottom: 100,
   },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: Platform.OS === 'android' ? Constants.statusBarHeight + 10 : 10,
-    paddingBottom: 20,
-  },
-  headerTitle: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: 'white',
-  },
-  settingsButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  profileSection: {
-    paddingHorizontal: 20,
-    marginBottom: 30,
-  },
-  profileCard: {
-    borderRadius: 20,
-    padding: 24,
-    alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.05)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
-    position: 'relative',
-    overflow: 'visible',
-  },
-  avatarContainer: {
-    position: 'relative',
-    marginBottom: 16,
-  },
-  avatar: {
-    width: 90,
-    height: 90,
-    borderRadius: 45,
-    borderWidth: 3,
-    borderColor: 'rgba(255,255,255,0.2)',
-  },
-  avatarBadge: {
-    position: 'absolute',
-    bottom: 0,
-    right: 0,
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: '#FF8C42',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: '#1A1A2E',
-  },
-  userName: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: 'white',
-    marginBottom: 4,
-  },
-  userEmail: {
-    fontSize: 14,
-    color: 'rgba(255,255,255,0.6)',
-  },
   templatesSection: {
-    paddingHorizontal: 20,
-    marginBottom: 30,
+    paddingHorizontal: 16,
   },
   sectionHeader: {
     flexDirection: 'row',
@@ -405,62 +367,62 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   sectionTitle: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: 'bold',
     color: 'white',
   },
   seeAllText: {
     fontSize: 14,
-    color: 'rgba(255,255,255,0.6)',
+    color: 'rgba(255, 255, 255, 0.5)',
   },
-  recentScroll: {
-    paddingRight: 20,
-    gap: 12,
+  templatesGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 16,
   },
-  recentCard: {
-    width: 120,
-    height: 160,
-    borderRadius: 12,
+  templateCard: {
+    width: CARD_WIDTH,
+    height: CARD_WIDTH * 1.15,
+    borderRadius: 20,
     overflow: 'hidden',
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    backgroundColor: 'white',
+    marginBottom: 16,
   },
-  recentImage: {
+  templateImage: {
     width: '100%',
     height: '100%',
-    resizeMode: 'cover',
   },
-  proBanner: {
-    marginHorizontal: 20,
-    marginBottom: 20,
-    borderRadius: 16,
-    padding: 20,
+  templateGradient: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: '40%',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    paddingBottom: 18,
   },
-  proBannerContent: {
+  tryButton: {
     flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.05)',
+    paddingHorizontal: 24,
+    paddingVertical: 8,
+    borderRadius: 100,
+    gap: 8,
+    backdropFilter: 'blur(34px)',
   },
-  proBannerText: {
-    flex: 1,
-    marginLeft: 12,
+  tryButtonPro: {
+    backgroundColor: 'rgba(61, 60, 65, 0.9)',
   },
-  proBannerTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
+  proIcon: {
+    marginRight: -4,
+  },
+  tryText: {
     color: 'white',
-    marginBottom: 2,
-  },
-  proBannerSubtitle: {
     fontSize: 14,
-    color: 'rgba(255,255,255,0.9)',
-  },
-  loadingContainer: {
-    padding: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  loadingText: {
-    color: 'rgba(255,255,255,0.6)',
-    fontSize: 14,
-    marginTop: 12,
+    fontWeight: '600',
   },
 });
