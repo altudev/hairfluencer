@@ -23,16 +23,9 @@ import { useAuth } from '@/hooks/useAuth';
 import useStore from '@/stores/useStore';
 import { authClient } from '@/lib/auth-client';
 import SettingsMenu, { type MenuItem } from '@/components/profile/SettingsMenu';
+import TemplateGrid, { type Template } from '@/components/profile/TemplateGrid';
 
 const { width } = Dimensions.get('window');
-const CARD_WIDTH = (width - 48) / 2;
-
-interface Template {
-  id: string;
-  image: string;
-  title: string;
-  isNew?: boolean;
-}
 
 const templates: Template[] = [
   {
@@ -141,26 +134,10 @@ export default function ProfileScreen() {
     },
   ];
 
-  const renderTemplate = ({ item }: { item: Template }) => (
-    <TouchableOpacity style={styles.templateCard} activeOpacity={0.8}>
-      <Image
-        source={{ uri: item.image }}
-        style={styles.templateImage}
-        contentFit="cover"
-        transition={200}
-        cachePolicy="memory-disk"
-      />
-      <LinearGradient
-        colors={['transparent', 'rgba(0,0,0,0.8)']}
-        style={styles.templateGradient}
-      >
-        <TouchableOpacity style={styles.tryButton}>
-          <Feather name="play-circle" size={20} color="white" />
-          <Text style={styles.tryText}>Try</Text>
-        </TouchableOpacity>
-      </LinearGradient>
-    </TouchableOpacity>
-  );
+  const handleTemplatePress = (template: Template) => {
+    console.log('Template pressed:', template.title);
+    // TODO: Navigate to try-on screen with template
+  };
 
   const displayName = user?.name || user?.email?.split('@')[0] || 'Guest User';
   const displayEmail = user?.email || 'guest@hairfluencer.app';
@@ -225,13 +202,7 @@ export default function ProfileScreen() {
               </TouchableOpacity>
             </View>
 
-            <View style={styles.templatesGrid}>
-              {templates.map((template) => (
-                <View key={template.id} style={styles.templateWrapper}>
-                  {renderTemplate({ item: template })}
-                </View>
-              ))}
-            </View>
+            <TemplateGrid templates={templates} onTemplatePress={handleTemplatePress} />
           </View>
 
           {/* Recent Transformations */}
@@ -412,51 +383,6 @@ const styles = StyleSheet.create({
   seeAllText: {
     fontSize: 14,
     color: 'rgba(255,255,255,0.6)',
-  },
-  templatesGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-  },
-  templateWrapper: {
-    width: CARD_WIDTH,
-    marginBottom: 16,
-  },
-  templateCard: {
-    width: '100%',
-    height: CARD_WIDTH * 1.3,
-    borderRadius: 16,
-    overflow: 'hidden',
-    backgroundColor: 'rgba(255,255,255,0.05)',
-  },
-  templateImage: {
-    width: '100%',
-    height: '100%',
-    resizeMode: 'cover',
-  },
-  templateGradient: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: '40%',
-    justifyContent: 'flex-end',
-    alignItems: 'center',
-    paddingBottom: 12,
-  },
-  tryButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    paddingHorizontal: 16,
-    paddingVertical: 6,
-    borderRadius: 20,
-    gap: 6,
-  },
-  tryText: {
-    color: 'white',
-    fontSize: 14,
-    fontWeight: '600',
   },
   recentScroll: {
     paddingRight: 20,
